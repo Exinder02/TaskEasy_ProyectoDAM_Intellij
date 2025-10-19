@@ -7,6 +7,7 @@
         <sourceTestOutputDir name="target/generated-test-sources/test-annotations" />
         <outputRelativeToContentRoot value="true" />
         <module name="TaskEasy_ProyectoDAM_Intellij" />
+        <module name="TaskEasy" />
       </profile>
     </annotationProcessing>
   </component>

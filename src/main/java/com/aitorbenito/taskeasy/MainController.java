@@ -102,7 +102,8 @@ public class MainController {
                 dpFecha.getEditor().positionCaret(formatted.length());
             }
         });
-        // ✅ Bloquear letras o caracteres inválidos en el campo de fecha (solo números y '/')
+
+        // ✅ Bloquear letras o caracteres inválidos en el campo de fecha (solo números y el simbolo '/')
         dpFecha.getEditor().textProperty().addListener((obs, oldText, newText) -> {
             // Solo permitir dígitos y barras (ejemplo válido: 25/10/2025)
             if (!newText.matches("[0-9/]*")) {
@@ -135,11 +136,15 @@ public class MainController {
         String estado = cbEstado.getValue();
         String fecha = "";
 
+
+
         // 1️⃣ Validar campos obligatorios
         if (titulo == null || titulo.isBlank() || estado == null) {
             mostrarAlerta("Datos incompletos", "Título y estado son obligatorios.");
             return;
         }
+
+
 
         // 2️⃣ Validar formato de fecha
         if (dpFecha.getEditor().getText() != null && !dpFecha.getEditor().getText().isBlank()) {
@@ -160,6 +165,8 @@ public class MainController {
             if (avisoSinFecha.showAndWait().orElse(ButtonType.CANCEL) != ButtonType.OK) return;
         }
 
+
+
         // 4️⃣ Confirmar si el estado es “Completada”
         if ("Completada".equalsIgnoreCase(estado)) {
             Alert confirmar = new Alert(Alert.AlertType.CONFIRMATION);
@@ -169,11 +176,15 @@ public class MainController {
             if (confirmar.showAndWait().orElse(ButtonType.CANCEL) != ButtonType.OK) return;
         }
 
+
+
         // 5️⃣ Insertar en la base de datos
         Database.ejecutar(
                 "INSERT INTO tareas (titulo, descripcion, fecha, estado) VALUES (?, ?, ?, ?)",
                 titulo, descripcion, fecha, estado
         );
+
+
 
         cargarTareas();
         limpiarCampos();
@@ -233,3 +244,7 @@ public class MainController {
         alert.showAndWait();
     }
 }
+
+
+
+/*Test de subida de cambios en git hub*/
