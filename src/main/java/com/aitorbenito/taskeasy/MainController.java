@@ -7,7 +7,7 @@ import javafx.scene.control.*;
 import javafx.util.StringConverter;
 
 import java.sql.*;
-import java.time.LocalDate;
+import java.time.*;
 import java.time.format.DateTimeFormatter;
 
 public class MainController {
@@ -57,12 +57,12 @@ public class MainController {
         });
 
 
-        // Forzar formato de fecha dia-Mes-año
+        // Forzar formato de fecha dia/Mes/año
         DateTimeFormatter fmt = DateTimeFormatter.ofPattern("dd/MM/yyyy");
         dpFecha.setPromptText("Dia/Mes/Año");
 
 
-// ✅ Formatear automáticamente la fecha mientras se escribe (dd/MM/yyyy)
+        // Formatear automáticamente la fecha mientras se escribe (dd/MM/yyyy)
         dpFecha.getEditor().textProperty().addListener((obs, oldText, newText) -> {
             if (newText == null) return;
 
@@ -103,7 +103,7 @@ public class MainController {
             }
         });
 
-        // ✅ Bloquear letras o caracteres inválidos en el campo de fecha (solo números y el simbolo '/')
+        // Bloquear letras o caracteres inválidos en el campo de fecha (solo números y el simbolo '/')
         dpFecha.getEditor().textProperty().addListener((obs, oldText, newText) -> {
             // Solo permitir dígitos y barras (ejemplo válido: 25/10/2025)
             if (!newText.matches("[0-9/]*")) {
@@ -112,25 +112,50 @@ public class MainController {
         });
 
 
+        //Modificar tareas, para usar esta funcion que hemos creado, añadimos este bloque en el metodo initialize
+        tablaTareas.getSelectionModel().selectedItemProperty().addListener((obs, oldSel, newSel) -> {
+            if (newSel != null) {
+                txtTitulo.setText(newSel.getTitulo());
+                txtDescripcion.setText(newSel.getDescripcion());
+
+                // Intentar convertir la fecha correctamente
+                try {
+                    if (newSel.getFecha() != null && !newSel.getFecha().equals("Sin fecha establecida")) {
+                        LocalDate fecha = LocalDate.parse(newSel.getFecha(), fmt);
+                        dpFecha.setValue(fecha);
+                    } else {
+                        dpFecha.setValue(null);
+                    }
+                } catch (Exception e) {
+                    dpFecha.setValue(null); // si algo falla, dejar vacío
+                }
+
+                cbEstado.setValue(newSel.getEstado());
+            }
+        });
 
 
-        // Selector de estado.
+
+        // Definimos los estados que hay dentro del Selector de estado.
         cbEstado.setItems(FXCollections.observableArrayList("Pendiente", "En curso", "Completada"));
-        // Establece el valor inicial del selector de estado como pendiente
+        // Establece el valor inicial del selector de estado como pendiente, ya que lo habitual es que una tarea se cree antes de ejecutarla o finalizarla.
         cbEstado.setValue("Pendiente");
 
 
 
-        // Inicializar y cargar tareas
+        // Inicializar y cargar tareas creadas
         tablaTareas.setItems(listaTareas);
         Database.ensureInitialized();
         cargarTareas();
     }
 
 
-
+    /*Funcion para agregar tareas, esta funcion tiene varias capturas de errores tipicos de introduccion de datos,
+     he intentado controlarlos en cada uno de los campos que conforman la funcion.
+     */
     @FXML
     private void agregarTarea() {
+        //Inicio las variables de la funcion
         String titulo = txtTitulo.getText();
         String descripcion = txtDescripcion.getText();
         String estado = cbEstado.getValue();
@@ -138,26 +163,31 @@ public class MainController {
 
 
 
-        // 1️⃣ Validar campos obligatorios
-        if (titulo == null || titulo.isBlank() || estado == null) {
-            mostrarAlerta("Datos incompletos", "Título y estado son obligatorios.");
+        // Validamos los campos obligatorios
+        if (titulo == null || titulo.isBlank() || fecha == null) {
+            mostrarAlerta("Datos incompletos", "Una tarea debe tener Título y fecha para poder crearse.");
             return;
         }
 
 
 
-        // 2️⃣ Validar formato de fecha
+        // Validamos el formato de la fecha
+
+        // Abrimos un condicional para decir que si en el editor de fecha los campos son diferentes a vacio,
+        // pase al siguiente punto de la funcion, un try catch que nos pedira la fecha en un formato concreto
         if (dpFecha.getEditor().getText() != null && !dpFecha.getEditor().getText().isBlank()) {
 
-            // Intentamos obtener la fecha como LocalDate
+            // Intentamos obtener la fecha como LocalDate, o la fecha actual del sitio donde se está ejecutando la aplicacion
             try {
                 fecha = dpFecha.getValue() != null ? dpFecha.getValue().toString() : "";
                 } catch (Exception e) {
-                    mostrarAlerta("Fecha inválida", "Introduce una fecha válida (por ejemplo: 2025-08-25).");
+                    //En caso de no cumplir con los criterios de fecha establecidos, mostrar aviso por pantalla
+                    mostrarAlerta("Fecha inválida", "Introduce una fecha válida (por ejemplo: 20/08/2025).");
                 return;
                 }
-        } else {
-            // 3️⃣ Si no hay fecha, preguntar si continuar sin ella
+        } else { //  Si no hay fecha, preguntar si continuamos la creacion de la tarea sin ella.
+
+            //Esto lo he hecho porque es posible que queramos tener una nota y que no dependa de una fecha de fin, como si podría ser el caso de una tarea
             Alert avisoSinFecha = new Alert(Alert.AlertType.CONFIRMATION);
             avisoSinFecha.setTitle("Tarea sin fecha");
             avisoSinFecha.setHeaderText(null);
@@ -167,18 +197,27 @@ public class MainController {
 
 
 
-        // 4️⃣ Confirmar si el estado es “Completada”
+        // Confirmar si el estado de la tarea es “Completada”, ya que crear una tarea como completada es extraño y lo
+        // mas normal es crear tareas pendientes de hacer o que están en proceso de finalizacion.
+
+        //Con motivo de lo expuesto en el parrafo anterior,
         if ("Completada".equalsIgnoreCase(estado)) {
+            //Tipo de aviso que vamos a tener cuando validemos
             Alert confirmar = new Alert(Alert.AlertType.CONFIRMATION);
+            //Definimos el mensaje
             confirmar.setTitle("Confirmar creación");
-            confirmar.setHeaderText(null);
+            //Ponemos un mensaje en el header
+            confirmar.setHeaderText("Confirmacion TaskEasy");
+            //Definimos la consulta que le vamos a hacer al usuario sobre si quiere crear la tarea como completada,
+            // como hemos visto en el bloque anterior de codigo, esto lo he hecho porque si un usuario solo quiere tener una nota, no necesitaria fecha de fin, pero si un estado.
             confirmar.setContentText("¿Estás seguro de que quieres crear una tarea nueva con estado 'Completada'?");
+            //Con este if validamos si creamos la nota o cancelamos la creacion.
             if (confirmar.showAndWait().orElse(ButtonType.CANCEL) != ButtonType.OK) return;
         }
 
 
 
-        // 5️⃣ Insertar en la base de datos
+        // Insertar los datos proporcionados por pantalla en la base de datos SQLite
         Database.ejecutar(
                 "INSERT INTO tareas (titulo, descripcion, fecha, estado) VALUES (?, ?, ?, ?)",
                 titulo, descripcion, fecha, estado
@@ -193,6 +232,7 @@ public class MainController {
 
 
 
+    //Funcion para eliminar tareas de la base de datos
     @FXML
     private void eliminarTarea() {
         Tarea seleccionada = tablaTareas.getSelectionModel().getSelectedItem();
@@ -206,7 +246,7 @@ public class MainController {
     }
 
 
-
+    //Funcion para cargar las tareas que tenemos en la base de datos
     @FXML
     private void cargarTareas() {
         listaTareas.clear();
@@ -223,6 +263,61 @@ public class MainController {
         } catch (SQLException e) {
             e.printStackTrace();
         }
+    }
+
+
+
+
+    //Funcion para modificar las tareas ya creadas en la base de datos
+    @FXML
+    private void modificarTarea() {
+        Tarea seleccionada = tablaTareas.getSelectionModel().getSelectedItem();
+
+        if (seleccionada == null) {
+            mostrarAlerta("Aviso", "Selecciona una tarea para modificar.");
+            return;
+        }
+
+        String nuevoTitulo = txtTitulo.getText().trim();
+        String nuevaDescripcion = txtDescripcion.getText().trim();
+
+        // Si el usuario no ha tocado la fecha, conservar la que ya tenía
+        LocalDate nuevaFecha = dpFecha.getValue();
+        String fechaTexto;
+
+        DateTimeFormatter fmt = DateTimeFormatter.ofPattern("dd/MM/yyyy");
+
+        if (nuevaFecha == null) {
+            // No se seleccionó ninguna nueva fecha → conservar la anterior
+            fechaTexto = seleccionada.getFecha();
+            if (fechaTexto == null || fechaTexto.isBlank() || fechaTexto.equalsIgnoreCase("Sin fecha establecida")) {
+                fechaTexto = "Sin fecha establecida";
+            }
+        } else {
+            // Convertir la fecha nueva al formato que queremos guardar
+            fechaTexto = nuevaFecha.format(fmt);
+        }
+
+        // Si no se elige nuevo estado, mantener el anterior
+        String nuevoEstado = cbEstado.getValue();
+        if (nuevoEstado == null || nuevoEstado.isBlank()) {
+            nuevoEstado = seleccionada.getEstado();
+        }
+
+        if (nuevoTitulo.isEmpty()) {
+            mostrarAlerta("Error", "El título no puede estar vacío.");
+            return;
+        }
+
+        // Actualizar en la base de datos
+        String sql = "UPDATE tareas SET titulo = ?, descripcion = ?, fecha = ?, estado = ? WHERE id = ?";
+        Database.ejecutar(sql, nuevoTitulo, nuevaDescripcion, fechaTexto, nuevoEstado, seleccionada.getId());
+
+        mostrarAlerta("Éxito", "La tarea ha sido modificada correctamente.");
+
+        // Refrescar tabla
+        cargarTareas();
+        limpiarCampos();
     }
 
 
