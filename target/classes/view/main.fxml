@@ -56,6 +56,7 @@
                 <Button text="Agregar" onAction="#agregarTarea"/>
                 <Button text="Eliminar" onAction="#eliminarTarea"/>
                 <Button text="Actualizar lista" onAction="#cargarTareas"/>
+                <Button text="Modificar" onAction="#modificarTarea"/>
             </HBox>
         </VBox>
     </bottom>
