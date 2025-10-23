@@ -11,7 +11,28 @@
     <top>
         <Label text="Gestor de tareas - TaskEasy"
                style="-fx-font-size: 18px; -fx-font-weight: bold; -fx-padding: 10;" />
+        <MenuBar>
+            <!-- Menú Archivo -->
+            <Menu text="Archivo">
+                <MenuItem text="Nueva tarea" onAction="#agregarTarea"/>
+                <MenuItem text="Guardar cambios" onAction="#guardarCambios"/>
+                <SeparatorMenuItem/>
+                <MenuItem text="Cerrar sesión" onAction="#cerrarSesion"/>
+                <MenuItem text="Salir" onAction="#salirAplicacion"/>
+            </Menu>
+
+            <!-- Menú Ajustes -->
+            <Menu text="Ajustes">
+                <MenuItem text="Cambiar tema (Oscuro/Claro)" onAction="#cambiarTema"/>
+            </Menu>
+
+            <!-- Menú Ayuda -->
+            <Menu text="Ayuda">
+                <MenuItem text="Acerca de TaskEasy" onAction="#mostrarAcercaDe"/>
+            </Menu>
+        </MenuBar>
     </top>
+
 
     <center>
         <TableView fx:id="tablaTareas">
@@ -55,8 +76,12 @@
 
                 <Button text="Agregar" onAction="#agregarTarea"/>
                 <Button text="Eliminar" onAction="#eliminarTarea"/>
-                <Button text="Actualizar lista" onAction="#cargarTareas"/>
                 <Button text="Modificar" onAction="#modificarTarea"/>
+                <Button text="Cerrar sesión" onAction="#cerrarSesion"/>
+
+                <!--añadimos este boton para cuando tengamos persistencia online, poder actualizar las tareas creadas en otro dispositivo.
+                <Button text="Actualizar lista" onAction="#cargarTareas"/> -->
+
             </HBox>
         </VBox>
     </bottom>
