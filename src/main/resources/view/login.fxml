@@ -1,0 +1,21 @@
+<?xml version="1.0" encoding="UTF-8"?>
+
+<?import javafx.scene.control.*?>
+<?import javafx.scene.layout.*?>
+
+<VBox spacing="10" alignment="CENTER" xmlns="http://javafx.com/javafx/21"
+      xmlns:fx="http://javafx.com/fxml"
+      fx:controller="com.aitorbenito.taskeasy.LoginController"
+      style="-fx-padding: 20;">
+
+    <Label text="Iniciar sesión en TaskEasy" style="-fx-font-size: 16px; -fx-font-weight: bold;"/>
+
+    <TextField fx:id="txtEmail" promptText="Correo electrónico"/>
+    <PasswordField fx:id="txtPassword" promptText="Contraseña"/>
+
+    <HBox spacing="10" alignment="CENTER">
+        <Button fx:id="btnLogin" text="Iniciar sesión" onAction="#login"/>
+        <Button fx:id="btnRegister" text="Registrarse" onAction="#register"/>
+    </HBox>
+
+</VBox>

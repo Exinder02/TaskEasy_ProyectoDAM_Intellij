@@ -1,9 +1,13 @@
 package com.aitorbenito.taskeasy;
 
+import javafx.application.Platform;
 import javafx.collections.FXCollections;
 import javafx.collections.ObservableList;
 import javafx.fxml.FXML;
+import javafx.fxml.FXMLLoader;
+import javafx.scene.Scene;
 import javafx.scene.control.*;
+import javafx.stage.Stage;
 import javafx.util.StringConverter;
 
 import java.sql.*;
@@ -139,10 +143,12 @@ public class MainController {
             if (confirmar.showAndWait().orElse(ButtonType.CANCEL) != ButtonType.OK) return;
         }
 
+        // Insertar los datos proporcionados por pantalla en la base de datos SQLite
         Database.ejecutar(
-                "INSERT INTO tareas (titulo, descripcion, fecha, estado) VALUES (?, ?, ?, ?)",
-                titulo, descripcion, fechaTexto, estado
-        );
+                "INSERT INTO tareas (titulo, descripcion, fecha, estado, usuario_id) VALUES (?, ?, ?, ?, ?)",
+                titulo, descripcion, fecha, estado, Session.getUsuarioActual()
+                );
+
 
         cargarTareas();
         limpiarCampos();
@@ -176,7 +182,18 @@ public class MainController {
     @FXML
     private void cargarTareas() {
         listaTareas.clear();
-        try (ResultSet rs = Database.consultar("SELECT * FROM tareas")) {
+
+        int usuarioId = Session.getUsuarioActual();
+
+        // Si por algún motivo no hay usuario logueado, no cargamos nada
+        if (usuarioId <= 0) {
+            System.out.println("⚠️ No hay usuario activo. No se cargan tareas.");
+            return;
+        }
+
+        try (ResultSet rs = Database.consultar(
+                "SELECT * FROM tareas WHERE usuario_id = ? ORDER BY fecha ASC", usuarioId)) {
+
             while (rs.next()) {
                 listaTareas.add(new Tarea(
                         rs.getInt("id"),
@@ -186,10 +203,15 @@ public class MainController {
                         rs.getString("estado")
                 ));
             }
+
+            // Actualizar la vista de la tabla
+            tablaTareas.setItems(listaTareas);
+
         } catch (SQLException e) {
             e.printStackTrace();
         }
     }
+
 
     // --- MODIFICAR TAREA ---
     @FXML
@@ -229,6 +251,79 @@ public class MainController {
         cargarTareas();
         limpiarCampos();
     }
+
+    @FXML
+    private void cerrarSesion() {
+        Alert confirm = new Alert(Alert.AlertType.CONFIRMATION);
+        confirm.setTitle("Cerrar sesión");
+        confirm.setHeaderText("¿Deseas cerrar tu sesión actual?");
+        confirm.setContentText("Si cierras sesion, no podras acceder a tus tareas hasta volver a iniciar sesión.");
+
+        if (confirm.showAndWait().orElse(ButtonType.CANCEL) != ButtonType.OK) {
+            return; // el usuario canceló
+        }
+
+        try {
+            // Limpia el usuario activo en la sesión
+            Session.setUsuarioActual(0);
+
+            // Cierra la ventana actual
+            Stage currentStage = (Stage) tablaTareas.getScene().getWindow();
+            currentStage.close();
+
+            // Carga la ventana de login
+            FXMLLoader loader = new FXMLLoader(getClass().getResource("/view/login.fxml"));
+            Stage loginStage = new Stage();
+            loginStage.setTitle("TaskEasy — Iniciar sesión");
+            loginStage.setScene(new Scene(loader.load()));
+            loginStage.show();
+
+        } catch (Exception e) {
+            e.printStackTrace();
+            Alert error = new Alert(Alert.AlertType.ERROR);
+            error.setTitle("Error");
+            error.setHeaderText("No se pudo cerrar sesión");
+            error.setContentText("Ha ocurrido un error al intentar volver al login.");
+            error.showAndWait();
+        }
+    }
+
+    @FXML
+    private void nuevaTarea() {
+        limpiarCampos();
+        mostrarAlerta("Nueva tarea", "Puedes introducir los datos de una nueva tarea.");
+    }
+
+    @FXML
+    private void guardarCambios() {
+        mostrarAlerta("Guardar cambios", "Las tareas se guardan automáticamente en la base de datos.");
+    }
+
+    @FXML
+    private void salirAplicacion() {
+        Alert confirm = new Alert(Alert.AlertType.CONFIRMATION);
+        confirm.setTitle("Salir de TaskEasy");
+        confirm.setHeaderText("¿Seguro que deseas cerrar la aplicación?");
+        if (confirm.showAndWait().orElse(ButtonType.CANCEL) == ButtonType.OK) {
+            Platform.exit();
+        }
+    }
+
+    @FXML
+    private void cambiarTema() {
+        // Aquí podríamos implementar un cambio de estilo entre claro/oscuro
+        mostrarAlerta("Tema", "Esta función estará disponible próximamente.");
+    }
+
+    @FXML
+    private void mostrarAcercaDe() {
+        Alert acercaDe = new Alert(Alert.AlertType.INFORMATION);
+        acercaDe.setTitle("Acerca de TaskEasy");
+        acercaDe.setHeaderText("Gestor de tareas - TaskEasy");
+        acercaDe.setContentText("Versión 1.0\nDesarrollado por Aitor Benito Heras\nProyecto Final CFGS DAM - Ilerna Online");
+        acercaDe.showAndWait();
+    }
+
 
     // --- LIMPIAR CAMPOS ---
     private void limpiarCampos() {
