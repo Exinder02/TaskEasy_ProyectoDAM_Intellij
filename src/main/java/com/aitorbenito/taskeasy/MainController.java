@@ -21,8 +21,8 @@ public class MainController {
     @FXML private TableColumn<Tarea, String> colDescripcion;
     @FXML private TableColumn<Tarea, String> colFecha;
     @FXML private TableColumn<Tarea, String> colEstado;
-    @FXML private TextField txtTitulo;
-    @FXML private TextArea txtDescripcion;
+    @FXML private TextField textoTitulo;
+    @FXML private TextArea textoDescripcion;
     @FXML private DatePicker dpFecha;
     @FXML private ChoiceBox<String> cbEstado;
 
@@ -31,23 +31,44 @@ public class MainController {
 
     @FXML
     public void initialize() {
+
+        //Mostrrar columna del titulo de la tarea
+        //Se muestran los datos del titulo introducido en la tarea con data.getValue()
         colTitulo.setCellValueFactory(data -> data.getValue().tituloProperty());
+
+        //Mostrar columan descripcion de la tarea.
+        //Se muestran los datos de la descripcion introducida en la tareacon data.getValue()
         colDescripcion.setCellValueFactory(data -> data.getValue().descripcionProperty());
+
+
+        //Mostrar columan fecha de la tarea.
+        //Se muestran los datos de la fecha introducida en la tarea con data.getValue()
         colFecha.setCellValueFactory(data -> data.getValue().fechaProperty());
+
+
+        //Mostrar columan estado de la tarea.
+        //Se muestran los datos del estado introducida en la tarea con data.getValue().estadoProperty()
         colEstado.setCellValueFactory(data -> data.getValue().estadoProperty());
 
         // Mostrar "Sin fecha establecida" solo en tareas reales (no en filas vacías),
         // Pasrá siempre que la tarea haya sido creada sin fecha de fin establecida
         colFecha.setCellFactory(column -> new TableCell<>() {
             @Override
+            //Creamos la funcion updateItem con la fecha en texto (ya que tenemos numero y caracereres como "/") y un boolean para verificar si está vacio vacio.
             protected void updateItem(String fecha, boolean empty) {
+
+                //Hacemos un update de la fecha, si se encuentra vacia le decimos que el texto es null, que ponga tipo "" que es de texto.
                 super.updateItem(fecha, empty);
                 if (empty || getTableRow() == null || getTableRow().getItem() == null) {
                     setText(null);
                     setStyle("");
+
+                    //Hacemos otro condicional para indicar que no hay fecha establecida
                 } else if (fecha == null || fecha.trim().isEmpty()) {
                     setText("Sin fecha establecida");
                     setStyle("-fx-text-fill: gray; -fx-font-style: italic;");
+
+                //Hacemos otro condicional, si se ha introducido fecha, poner el texto introducido.
                 } else {
                     setText(fecha);
                     setStyle("");
@@ -85,8 +106,8 @@ public class MainController {
         // --- CUANDO SE SELECCIONA UNA TAREA ---
         tablaTareas.getSelectionModel().selectedItemProperty().addListener((obs, oldSel, newSel) -> {
             if (newSel != null) {
-                txtTitulo.setText(newSel.getTitulo());
-                txtDescripcion.setText(newSel.getDescripcion());
+                textoTitulo.setText(newSel.getTitulo());
+                textoDescripcion.setText(newSel.getDescripcion());
 
                 // Intentar convertir la fecha correctamente (String → LocalDate)
                 try {
@@ -123,8 +144,8 @@ public class MainController {
     // --- AGREGAR TAREA ---
     @FXML
     private void agregarTarea() {
-        String titulo = txtTitulo.getText();
-        String descripcion = txtDescripcion.getText();
+        String titulo = textoTitulo.getText();
+        String descripcion = textoDescripcion.getText();
         String estado = cbEstado.getValue();
         LocalDate fecha = dpFecha.getValue();
 
@@ -222,8 +243,8 @@ public class MainController {
             return;
         }
 
-        String nuevoTitulo = txtTitulo.getText().trim();
-        String nuevaDescripcion = txtDescripcion.getText().trim();
+        String nuevoTitulo = textoTitulo.getText().trim();
+        String nuevaDescripcion = textoDescripcion.getText().trim();
         LocalDate nuevaFecha = dpFecha.getValue();
         String nuevoEstado = cbEstado.getValue();
 
@@ -257,7 +278,6 @@ public class MainController {
         Alert confirm = new Alert(Alert.AlertType.CONFIRMATION);
         confirm.setTitle("Cerrar sesión");
         confirm.setHeaderText("¿Deseas cerrar tu sesión actual?");
-        confirm.setContentText("Si cierras sesion, no podras acceder a tus tareas hasta volver a iniciar sesión.");
 
         if (confirm.showAndWait().orElse(ButtonType.CANCEL) != ButtonType.OK) {
             return; // el usuario canceló
@@ -284,6 +304,7 @@ public class MainController {
             error.setTitle("Error");
             error.setHeaderText("No se pudo cerrar sesión");
             error.setContentText("Ha ocurrido un error al intentar volver al login.");
+
             error.showAndWait();
         }
     }
@@ -327,10 +348,10 @@ public class MainController {
 
     // --- LIMPIAR CAMPOS ---
     private void limpiarCampos() {
-        txtTitulo.clear();
-        txtDescripcion.clear();
+        textoTitulo.clear();
+        textoDescripcion.clear();
         dpFecha.setValue(null);
-        cbEstado.setValue("Pendiente");
+        cbEstado.setValue(null);
     }
 
     // --- ALERTAS ---
