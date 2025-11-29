@@ -103,7 +103,7 @@ public class MainController {
             }
         });
 
-        // --- CUANDO SE SELECCIONA UNA TAREA ---
+        //                      CUANDO SE SELECCIONA UNA TAREA
         tablaTareas.getSelectionModel().selectedItemProperty().addListener((obs, oldSel, newSel) -> {
             if (newSel != null) {
                 textoTitulo.setText(newSel.getTitulo());
