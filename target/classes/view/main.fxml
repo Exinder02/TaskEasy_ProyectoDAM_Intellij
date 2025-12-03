@@ -79,9 +79,6 @@
                 <Button text="Modificar" onAction="#modificarTarea"/>
                 <Button text="Cerrar sesión" onAction="#cerrarSesion"/>
 
-                <!--añadimos este boton para cuando tengamos persistencia online, poder actualizar las tareas creadas en otro dispositivo.
-                <Button text="Actualizar lista" onAction="#cargarTareas"/> -->
-
             </HBox>
 
             <!-- HBOX SOLO PARA LA LEYENDA -->

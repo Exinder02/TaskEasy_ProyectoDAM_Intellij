@@ -32,7 +32,7 @@ public class MainController {
     @FXML private ChoiceBox<String> cbEstado;
     @FXML private HBox contenedorLeyenda;
 
-
+    private boolean modoOscuro = false;
     private final ObservableList<Tarea> listaTareas = FXCollections.observableArrayList();
     private final DateTimeFormatter fmt = DateTimeFormatter.ofPattern("dd/MM/yyyy");
 
@@ -415,9 +415,32 @@ public class MainController {
 
     @FXML
     private void cambiarTema() {
-        // Aquí podríamos implementar un cambio de estilo entre claro/oscuro
-        mostrarAlerta("Tema", "Esta función estará disponible próximamente.");
+
+        Scene scene = tablaTareas.getScene();
+        if (scene == null) return;
+
+        // limpiar estilos anteriores
+        scene.getStylesheets().clear();
+
+        // saber si ya estamos en modo oscuro
+        boolean modoOscuro = scene.getProperties().getOrDefault("dark-mode", false).equals(true);
+
+        if (modoOscuro) {
+            // aplicar tema claro
+            scene.getStylesheets().add(
+                    getClass().getResource("/css/temaClaro.css").toExternalForm()
+            );
+            scene.getProperties().put("dark-mode", false);
+
+        } else {
+            // aplicar tema oscuro
+            scene.getStylesheets().add(
+                    getClass().getResource("/css/temaOscuro.css").toExternalForm()
+            );
+            scene.getProperties().put("dark-mode", true);
+        }
     }
+
 
     @FXML
     private void mostrarAcercaDe() {
