@@ -10,7 +10,7 @@
 
     <Label text="Iniciar sesión en TaskEasy" style="-fx-font-size: 16px; -fx-font-weight: bold;"/>
 
-    <TextField fx:id="txtEmail" promptText="Correo electrónico"/>
+    <TextField fx:id="txtUser" promptText="Correo electrónico / Usuario"/>
     <PasswordField fx:id="txtPassword" promptText="Contraseña"/>
 
     <HBox spacing="10" alignment="CENTER">

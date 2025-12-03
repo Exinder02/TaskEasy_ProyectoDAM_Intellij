@@ -10,6 +10,11 @@ import javafx.scene.control.*;
 import javafx.stage.Stage;
 import javafx.util.StringConverter;
 
+import javafx.scene.layout.HBox;
+import javafx.scene.control.Label;
+import javafx.scene.layout.Region;
+
+
 import java.sql.*;
 import java.time.*;
 import java.time.format.DateTimeFormatter;
@@ -25,6 +30,8 @@ public class MainController {
     @FXML private TextArea textoDescripcion;
     @FXML private DatePicker dpFecha;
     @FXML private ChoiceBox<String> cbEstado;
+    @FXML private HBox contenedorLeyenda;
+
 
     private final ObservableList<Tarea> listaTareas = FXCollections.observableArrayList();
     private final DateTimeFormatter fmt = DateTimeFormatter.ofPattern("dd/MM/yyyy");
@@ -125,6 +132,8 @@ public class MainController {
             }
         });
 
+
+
         //Habilitamos el modo de seleccion multiple de tareas en la tabla
         tablaTareas.getSelectionModel().setSelectionMode(SelectionMode.MULTIPLE);
         //Mensaje para avisar que no hay tareas creadas y se debe crear una nueva.
@@ -139,6 +148,80 @@ public class MainController {
         Database.ensureInitialized();
         tablaTareas.setItems(listaTareas);
         cargarTareas();
+
+        // Colorear filas según estado
+        tablaTareas.setRowFactory(tv -> new TableRow<Tarea>() {
+            @Override
+            protected void updateItem(Tarea tarea, boolean empty) {
+                super.updateItem(tarea, empty);
+
+                if (empty || tarea == null) {
+                    setStyle("");
+                    return;
+                }
+
+                String estado = tarea.getEstado();
+
+                if (estado == null || estado.trim().isEmpty()) {
+                    // Estado sin definir → pintar fila de naranja suave
+                    setStyle("-fx-background-color: #ffd4a3;");
+                    return;
+                }
+
+                switch (estado.toLowerCase()) {
+                    case "completada":
+                        setStyle("-fx-background-color: #b6f7b0;");  // pintar fila en verde suave si la tarea está completada
+                        break;
+
+                    case "pendiente":
+                        setStyle("-fx-background-color: #fff4a3;");  // pintar fila en amarillo suave si la tarea está pendiente
+                        break;
+
+                    case "en curso":
+                        setStyle("-fx-background-color: #cfe3ff;");  // pintar fila en azul claro suave si la tarea está en curso
+                        break;
+
+                    default:
+                        setStyle("");
+                }
+            }
+        });
+
+        //Crear la leyenda al final del initialize
+        crearLeyendaColores();
+
+    }
+
+    private void crearLeyendaColores() {
+        if (contenedorLeyenda == null) return;
+
+        contenedorLeyenda.setSpacing(10);
+
+        contenedorLeyenda.getChildren().setAll(
+                crearItemLeyenda("Completada", "#b6f7b0"),
+                crearItemLeyenda("En curso",   "#cfe3ff"),
+                crearItemLeyenda("Pendiente",  "#fff4a3"),
+                crearItemLeyenda("Sin estado", "#ffd4a3")
+        );
+    }
+
+    private HBox crearItemLeyenda(String texto, String colorHex) {
+        HBox box = new HBox(5);
+
+        Region color = new Region();
+        color.setPrefSize(16, 16);
+        color.setStyle(
+                "-fx-background-color: " + colorHex + ";" +
+                        "-fx-border-color: #888;" +
+                        "-fx-border-radius: 3;" +
+                        "-fx-background-radius: 3;"
+        );
+
+        Label label = new Label(texto);
+
+        box.getChildren().addAll(color, label);
+        return box;
+
     }
 
     // --- AGREGAR TAREA ---
@@ -317,7 +400,7 @@ public class MainController {
 
     @FXML
     private void guardarCambios() {
-        mostrarAlerta("Guardar cambios", "Las tareas se guardan automáticamente en la base de datos.");
+        mostrarAlerta("Guardar cambios", "Tareas guardadas.\n\n Las tareas se guardan automáticamente en la base de datos:\n Al crear, modificar o eliminar una tarea.");
     }
 
     @FXML

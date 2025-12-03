@@ -7,7 +7,7 @@ import java.sql.*;
 
 public class LoginController {
 
-    @FXML private TextField txtEmail;
+    @FXML private TextField txtUser;
     @FXML private PasswordField txtPassword;
     @FXML private Button btnLogin;
 
@@ -51,11 +51,11 @@ public class LoginController {
      */
     @FXML
     private void login() {
-        String email = txtEmail.getText().trim();
+        String email = txtUser.getText().trim();
         String password = txtPassword.getText().trim();
 
         if (email.isEmpty() || password.isEmpty()) {
-            showAlert("Error", "Introduce tu correo y contraseña.");
+            showAlert("Error", "Introduce tu correo / Usuario y contraseña.");
             return;
         }
 
@@ -105,7 +105,7 @@ public class LoginController {
      */
     @FXML
     private void register() {
-        String email = txtEmail.getText().trim();
+        String email = txtUser.getText().trim();
         String password = txtPassword.getText().trim();
 
         if (email.isEmpty() || password.isEmpty()) {
