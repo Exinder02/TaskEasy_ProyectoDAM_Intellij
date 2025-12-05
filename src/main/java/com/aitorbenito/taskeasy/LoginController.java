@@ -1,135 +1,130 @@
 package com.aitorbenito.taskeasy;
 
 import javafx.fxml.FXML;
+import javafx.fxml.FXMLLoader;
+import javafx.scene.Scene;
 import javafx.scene.control.*;
 import javafx.stage.Stage;
-import java.sql.*;
 
+import java.sql.ResultSet;
+import java.sql.SQLException;
+
+/* ---------------------
+   Clase LoginController
+   ---------------------
+ Controlador asociado a la vista 'login.fxml'.
+ Se encarga de gestionar la interfaz de inicio de sesión:
+ 1. Valída las credenciales del usuario contra la base de datos.
+ 2. Inicia la sesión global del usuario (mediante la clase Session).
+ 3. Gestiona la navegación a la ventana principal (Main.openMain()).
+ */
 public class LoginController {
 
+    /*Elementos de la interfaz de usuario (inyección FXML)*/
     @FXML private TextField txtUser;
     @FXML private PasswordField txtPassword;
     @FXML private Button btnLogin;
 
+    /* -------------------------
+          Metodo dinitialize:
+       -------------------------
 
-    /**
-     * Método initialize()
-     * --------------------
-     * Este método se ejecuta automáticamente cuando se carga la vista del Login (login.fxml).
-     *
-     * Aquí lo usamos para asegurarnos de que la base de datos esté correctamente creada
-     * antes de que el usuario intente iniciar sesión o registrarse.
-     *
-     * - Si es la primera vez que se abre la app, se crearán las tablas necesarias.
-     * - Si ya existe la base de datos, no hace nada.
-     *
-     * Es una forma de garantizar que el sistema siempre tiene la infraestructura mínima
-     * para funcionar.
+     Se encarga de la inicialización, es llamado automáticamente por JavaFX después de cargar el FXML.
+     Se usa para tareas de configuración inicial necesarias.
      */
     @FXML
     private void initialize() {
+        /* Primero se asegura que la estructura de la base de datos exista antes de realizar cualquier intento de login.*/
         Database.ensureInitialized();
     }
 
 
-    /**
-     * Método login()
-     * ----------------
-     * Este método se ejecuta cuando el usuario pulsa el botón "Iniciar sesión".
-     *
-     * 1. Obtiene los valores de email y contraseña escritos en los campos.
-     * 2. Comprueba que no estén vacíos.
-     * 3. Realiza una consulta SQL para verificar si existe un usuario con ese email y contraseña.
-     * 4. Si existe:
-     *      - Se guarda su ID en la clase Session.
-     *      - Se muestra un mensaje de bienvenida.
-     *      - Se cierra la ventana del login.
-     *      - Se abre la ventana principal (Main.openMain()).
-     * 5. Si NO existe, muestra un mensaje de error.
-     *
-     * Este método usa Database.consultar(), que devuelve un ResultSet.
+    /* ----------------------
+           Metodo login:
+       ----------------------
+     Maneja la acción del botón "Iniciar sesión".
+     Es el metodo central de autenticación.
      */
     @FXML
     private void login() {
-        String email = txtUser.getText().trim();
+        /*Gestion de los datos introducidos en los campos de usuario y contraseña*/
+        String userInput = txtUser.getText().trim();
         String password = txtPassword.getText().trim();
 
-        if (email.isEmpty() || password.isEmpty()) {
-            showAlert("Error", "Introduce tu correo / Usuario y contraseña.");
+        /*Validacion de campos vacios, en caso de que alguno esté vacio, o los dos,
+         da un aviso de error, y solicita introducir los datos*/
+        if (userInput.isEmpty() || password.isEmpty()) {
+            showAlert("Error", "Introduce tu nombre / correo y contraseña.");
             return;
         }
-
+        /*En caso de que los datos no estén vacios, hace una consulta a la base de datos,
+         verificando por email y nombre en el primer campo, y la contraseña en el segundo*/
         try (ResultSet rs = Database.consultar(
-                "SELECT * FROM usuarios WHERE email = ? AND password = ?",
-                email, password
+                "SELECT * FROM usuarios WHERE (email = ? OR nombre = ?) AND password = ?",
+                userInput, userInput, password
         )) {
-
+            /*Si la autenticacion es correcta pasa a la siguiente linea*/
             if (rs.next()) {
+                /*Si nos hemos logueado correctamente devuelve el ID del user*/
                 int userId = rs.getInt("id");
 
-                /**
-                 * Guardamos temporalmente el ID del usuario que inició sesión.
-                 * Esto permite que otras partes de la aplicación sepan qué usuario está usando la app.
-                 */
+                /*Iniciamos la sesion del usuario con ese ID concreto*/
                 Session.setUsuarioActual(userId);
 
-                showAlert("Bienvenido", "Inicio de sesión correcto.");
+                /*Nos devuelve un mensaje de bienvenida con el nombre del user que se ha logueado*/
+                showAlert("Bienvenido",
+                        "Has iniciado sesión como: " + rs.getString("nombre"));
 
-                closeWindow();      // Cierra la ventana de login
-                Main.openMain();    // Abre la ventana principal
+                /*Cerramos la ventana del login*/
+                closeWindow();
+                /*Abrimos la ventana del Main, que es la principal de la app*/
+                Main.openMain();
 
+                /*En cualquier caso que no encuentre coincidencia con los datos
+                de los usuarios que hay en la base de datos, devuelve un mensaje de aviso*/
             } else {
                 showAlert("Error", "Credenciales incorrectas.");
             }
 
+            /*Aquí he metido un catch por si hubiera alguna otra excepción que no estuviese controlada,
+            por ejemplo algún error con la base de datos.*/
         } catch (SQLException e) {
+            e.printStackTrace();
+            showAlert("Error", "Error inesperado al iniciar sesión.");
+        }
+    }
+
+
+    /*------------------------------
+            Metodo register:
+      ------------------------------
+     Es el encargado de manejar la accion del boton de registrarse,
+     Abre una nueva ventana para el registro de un nuevo usuario con los campos: Email, Nombre, Contraseña
+    */
+    @FXML
+    private void register() {
+        /*Carga la ventana del register.fxml*/
+        try {
+            FXMLLoader loader = new FXMLLoader(getClass().getResource("/view/register.fxml"));
+            Scene scene = new Scene(loader.load());
+
+            Stage stage = new Stage();
+            stage.setTitle("Crear cuenta");
+            stage.setScene(scene);
+            stage.setResizable(false);
+            stage.show();
+
+        } catch (Exception e) {
             e.printStackTrace();
         }
     }
 
 
-    /**
-     * Método register()
-     * -------------------
-     * Este método se ejecuta cuando el usuario pulsa el botón "Registrarse".
-     *
-     * 1. Obtiene email y contraseña.
-     * 2. Comprueba que no estén vacíos.
-     * 3. Insertamos un nuevo usuario en la tabla 'usuarios'.
-     *    - Usamos el email también como nombre temporal.
-     * 4. Si el correo ya existe (porque tiene restricción UNIQUE):
-     *      - Saltará una excepción y mostramos un mensaje de error.
-     *
-     * Este método NO inicia sesión automáticamente.
-     * Simplemente crea la cuenta.
-     */
-    @FXML
-    private void register() {
-        String email = txtUser.getText().trim();
-        String password = txtPassword.getText().trim();
-
-        if (email.isEmpty() || password.isEmpty()) {
-            showAlert("Error", "Rellena todos los campos para registrarte.");
-            return;
-        }
-
-        try {
-            Database.ejecutar(
-                    "INSERT INTO usuarios (nombre, email, password) VALUES (?, ?, ?)",
-                    email, email, password
-            );
-
-            showAlert("Registro exitoso", "Tu cuenta ha sido creada.");
-
-        } catch (Exception e) {
-            showAlert("Error", "El correo ya está en uso.");
-        }
-    }
-
-
-    /**
-     * Cierra la ventana actual del login.
-     * Se usa cuando el usuario inicia sesión correctamente.
+    /*----------------------
+        Metodo closeWindow
+      ----------------------
+     Su función es cerrar la ventana actual (el Stage).
+     Se obtiene la referencia al Stage a través de cualquier control de la Scene.
      */
     private void closeWindow() {
         Stage stage = (Stage) btnLogin.getScene().getWindow();
@@ -137,13 +132,12 @@ public class LoginController {
     }
 
 
-    /**
-     * Muestra un cuadro de diálogo informativo.
-     * Se usa tanto para errores como para mensajes de éxito.
-     *
-     * @param titulo Título de la ventana emergente
-     * @param msg    Mensaje que se muestra al usuario
-     */
+
+    /* --------------------
+         Metodo showAlert:
+       --------------------
+     Metodo utilitario para mostrar mensajes de alerta al usuario.
+    */
     private void showAlert(String titulo, String msg) {
         Alert alert = new Alert(Alert.AlertType.INFORMATION);
         alert.setTitle(titulo);

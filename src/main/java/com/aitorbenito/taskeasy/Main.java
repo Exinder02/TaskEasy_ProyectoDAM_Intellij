@@ -6,11 +6,13 @@ import javafx.scene.Parent;
 import javafx.scene.Scene;
 import javafx.stage.Stage;
 
-/**
- Clase principal (Main) de la aplicación TaskEasy.
+import java.util.Objects;
 
- Esta clase se extiende de `javafx.application.Application`, lo que la hace
- el punto de entrada de cualquier proyecto JavaFX.
+/*
+ Clase principal (Main) de mi aplicación TaskEasy.
+
+ Esta clase se extiende de `javafx.application.Application`,
+ lo que la hace el punto de entrada de cualquier proyecto JavaFX.
 
  Desde esta clase Main:
 
@@ -20,12 +22,15 @@ import javafx.stage.Stage;
 
  IMPORTANTE:
  El metodo `main()` NO abre ventanas. Solo lanza el sistema JavaFX,
- * que a su vez llama automáticamente al metodo `start()`.
+ que a su vez llama automáticamente al metodo `start()`.
  */
-
 public class Main extends Application {
 
-    /**
+
+
+    /*-----------------------
+          Metodo Start:
+      -----------------------
      Metodo que JavaFX ejecuta automáticamente al iniciar la aplicación.
 
      Aquí cargamos la primera ventana (Stage) que verá el usuario: el login.
@@ -41,18 +46,23 @@ public class Main extends Application {
     @Override
     public void start(Stage stage) throws Exception {
 
-        /** Cargar el archivo FXML del login */
+        /* Cargar el archivo FXML del login */
         FXMLLoader fxmlLoader = new FXMLLoader(getClass().getResource("/view/login.fxml"));
         Parent root = fxmlLoader.load();
 
-        /** Configuración básica de la ventana de inicio de sesión, impide modificar tamaño */
+        /* Configuración básica de la ventana de inicio de sesión, impide modificar tamaño */
         stage.setTitle("TaskEasy — Inicio de sesión");
         stage.setScene(new Scene(root, 400, 300));
         stage.setResizable(false);  // Evitar redimensionar la ventana de login
         stage.show();               // Mostrarla en pantalla
     }
 
-    /**
+
+
+    /* ----------------------------
+            Metodo openMain
+       ----------------------------
+
      Metodo estático utilizado por el LoginController para abrir la ventana principal.
 
      Este metodo se ejecuta únicamente después de que:
@@ -66,7 +76,6 @@ public class Main extends Application {
      - Aplica la escena y muestra el panel principal de la aplicación.
 
      Al crearse un nuevo Stage, no interfiere con el login que ya se cerró.
-
      */
     public static void openMain() {
         try {
@@ -74,8 +83,29 @@ public class Main extends Application {
             Parent root = fxmlLoader.load();
 
             Stage stage = new Stage();
+            Scene scene = new Scene(root, 900, 600);
+
+            /* --------------------------------------
+             INYECCIÓN DEL TEMA CLARO POR DEFECTO
+             ----------------------------------------
+
+            Usamos Objects.requireNonNull() para asegurar que el recurso
+            ha sido encontrado antes de intentar llamar a .toExternalForm(), lo cual previene
+            una NullPointerException si la ruta del CSS es incorrecta o el archivo no existe.
+            */
+            String temaClaroPath = Objects.requireNonNull(
+                    Main.class.getResource("/css/temaClaro.css"),
+                    "ERROR: No se encontró el archivo /css/temaClaro.css"
+            ).toExternalForm(); // .toExternalForm() es NECESARIO para que JavaFX lo acepte como String URL.
+
+            // Aplica la hoja de estilos inicial (Tema Claro) a la Scene.
+            scene.getStylesheets().add(temaClaroPath);
+            /*Se añade una propiedad a la Scene que MainController
+            usará para saber qué tema está activo y poder alternar entre ellos*/
+            scene.getProperties().put("dark-mode", false);
+
             stage.setTitle("TaskEasy — Gestor de tareas");
-            stage.setScene(new Scene(root, 900, 600));
+            stage.setScene(scene);
             stage.show();
 
         } catch (Exception e) {
@@ -83,14 +113,14 @@ public class Main extends Application {
         }
     }
 
-    /**
-     Metodo main tradicional en Java.
 
-     Su única función es llamar a `launch()`, que pertenece a la clase Application
-     y se encarga de arrancar el entorno gráfico JavaFX.
 
-     Una vez ejecutado `launch()`, JavaFX llamará automáticamente al metodo `start(Stage stage)`.
+    /*----------------------------------
+       Metodo main tradicional en Java.
+      ----------------------------------
 
+     Su única función es llamar a `launch()`, que es el metodo encargado
+     de arrancar el entorno gráfico JavaFX y, posteriormente, llamar a `start()``.
      */
     public static void main(String[] args) {
         launch(args);  // Arranca JavaFX

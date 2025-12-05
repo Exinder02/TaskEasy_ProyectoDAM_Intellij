@@ -1,31 +1,22 @@
-
 /* --- FONDO GLOBAL --- */
 .root {
     -fx-base: #2b2b2b;
     -fx-background-color: #2b2b2b;
 }
 
-/* --- BARRA DE MENÚ --- */
+/* --- BARRA DE MENÚ y MENÚS DESPLEGABLES --- (Sin cambios) */
 .menu-bar {
     -fx-background-color: #1e1e1e;}
-
 .menu-bar .label {
     -fx-text-fill: #e5d6c1; /* gris cálido */}
-
 .menu:hover, .menu:focused {
     -fx-background-color: #3a3a3a;}
-
-
-/* --- MENÚS DESPLEGABLES --- */
 .context-menu {
     -fx-background-color: #1e1e1e;}
-
 .menu-item .label {
     -fx-text-fill: #e5d6c1;}
-
 .menu-item:focused {
     -fx-background-color: #3a3a3a;}
-
 
 /* --- TABLA --- */
 .table-view {
@@ -33,24 +24,34 @@
     -fx-control-inner-background: #2b2b2b;
     -fx-table-cell-border-color: #444;
     -fx-table-header-border-color: #444;}
-
-/* Encabezados de columnas */
 .table-view .column-header-background {
     -fx-background-color: #1e1e1e;}
-
 .table-view .column-header .label {
     -fx-text-fill: #e5d6c1; /* gris cálido */}
 
-
-/* TEXTO DE CELDAS */
+/* TEXTO DE CELDAS (por defecto en gris cálido) */
 .table-cell {
-    -fx-text-fill: gray;}
+    -fx-text-fill: black;
+    -fx-background-color: transparent;
+}
 
-/* Si una fila está seleccionada */
+/* ---------------------------------------------------- */
+/* ESTILO PARA FILAS SELECCIONADAS (OSCURO)             */
+/* ---------------------------------------------------- */
+.table-row-cell:selected {
+    /* Fondo de selección */
+    -fx-background-color: #1A73E8;
+}
+
+/* Celdas dentro de una fila seleccionada: Texto negro y negrita */
 .table-row-cell:selected .table-cell {
-    -fx-text-fill: white !important;}
+    /* Forzamos el texto a negro. El fondo oscuro lo hará resaltar. */
+    -fx-text-fill: black !important;
+    -fx-font-weight: bold;
+    -fx-background-color: transparent;
+}
 
-/* --- CAMPOS DE TEXTO --- */
+/* --- CAMPOS DE TEXTO y BOTONES --- (Sin cambios) */
 .text-field,
 .text-area {
     -fx-background-color: #3a3a3a;
@@ -58,20 +59,13 @@
     -fx-text-fill: #e5d6c1;
     -fx-prompt-text-fill: #888;
     -fx-border-color: #555;}
-
-/* --- BOTONES --- */
 .button {
     -fx-background-color: #444;
     -fx-text-fill: #e5d6c1;}
-
 .button:hover {
     -fx-background-color: #555;}
-
-
-/* --- DATEPICKER --- */
 .date-picker .text-field {
     -fx-background-color: #3a3a3a;
     -fx-text-fill: #e5d6c1;}
-
 .date-picker-popup {
     -fx-background-color: #1e1e1e;}

@@ -1,0 +1,51 @@
+<?xml version="1.0" encoding="UTF-8"?>
+
+<?import javafx.geometry.Insets?>
+<?import javafx.scene.control.*?>
+<?import javafx.scene.layout.*?>
+
+<BorderPane xmlns="http://javafx.com/javafx/21"
+            xmlns:fx="http://javafx.com/fxml"
+            fx:controller="com.aitorbenito.taskeasy.TaskFormController"
+            prefWidth="420" prefHeight="380"
+            style="-fx-background-color: white; -fx-padding: 20;">
+
+    <top>
+        <Label fx:id="tituloVentana"
+               style="-fx-font-size: 20px; -fx-font-weight: bold;" />
+    </top>
+
+    <center>
+        <VBox spacing="12" style="-fx-padding: 10;">
+
+            <Label text="Título:"/>
+            <TextField fx:id="txtTitulo" promptText="Escribe un título"/>
+
+            <Label text="Descripción:"/>
+            <TextArea fx:id="txtDescripcion" prefRowCount="4" wrapText="true"
+                      promptText="Describe la tarea (opcional)"/>
+
+            <Label text="Fecha:"/>
+            <DatePicker fx:id="dpFecha"/>
+
+            <Label text="Estado:"/>
+            <ChoiceBox fx:id="cbEstado"/>
+        </VBox>
+    </center>
+
+    <bottom>
+        <HBox spacing="10" alignment="CENTER_RIGHT" style="-fx-padding: 10 0 0 0;">
+            <Button text="Eliminar" fx:id="btnEliminar"
+                    style="-fx-background-color: #ff6b6b; -fx-text-fill: white;"
+                    onAction="#eliminarTarea"/>
+
+            <Region HBox.hgrow="ALWAYS"/>
+
+            <Button text="Cancelar" onAction="#cerrar"/>
+            <Button text="Guardar" fx:id="btnGuardar"
+                    style="-fx-background-color: #4caf50; -fx-text-fill: white;"
+                    onAction="#guardar"/>
+        </HBox>
+    </bottom>
+
+</BorderPane>

@@ -3,264 +3,223 @@ package com.aitorbenito.taskeasy;
 import javafx.application.Platform;
 import javafx.collections.FXCollections;
 import javafx.collections.ObservableList;
+
 import javafx.fxml.FXML;
 import javafx.fxml.FXMLLoader;
+
 import javafx.scene.Scene;
+import javafx.scene.Parent;
 import javafx.scene.control.*;
-import javafx.stage.Stage;
-import javafx.util.StringConverter;
-
 import javafx.scene.layout.HBox;
-import javafx.scene.control.Label;
 import javafx.scene.layout.Region;
+import javafx.scene.layout.VBox;
 
+import javafx.stage.Modality;
+import javafx.stage.Stage;
 
 import java.sql.*;
 import java.time.*;
 import java.time.format.DateTimeFormatter;
 
+/* ----------------------------------
+      Clase MainController
+   ----------------------------------
+   Controlador principal de la aplicación, asociado a 'main.fxml'.
+   Gestiona la visualización, la manipulación de tareas y las opciones de sesión.
+   */
 public class MainController {
 
+    /* Inyección de elementos del FXML: La tabla y sus columnas. */
     @FXML private TableView<Tarea> tablaTareas;
     @FXML private TableColumn<Tarea, String> colTitulo;
     @FXML private TableColumn<Tarea, String> colDescripcion;
     @FXML private TableColumn<Tarea, String> colFecha;
     @FXML private TableColumn<Tarea, String> colEstado;
-    @FXML private TextField textoTitulo;
-    @FXML private TextArea textoDescripcion;
-    @FXML private DatePicker dpFecha;
-    @FXML private ChoiceBox<String> cbEstado;
+
+    /* Contenedores para elementos de interfaz (Ej. para la leyenda de colores). */
+    @FXML private VBox contenedorBottom;
     @FXML private HBox contenedorLeyenda;
 
-    private boolean modoOscuro = false;
+    /* Estructura de datos crucial: Lista que se enlaza al TableView (Data Binding).
+       ObservableList permite que la tabla se actualice automáticamente al cambiar la lista. */
     private final ObservableList<Tarea> listaTareas = FXCollections.observableArrayList();
+
+    /* Formateador de fecha reutilizable. */
     private final DateTimeFormatter fmt = DateTimeFormatter.ofPattern("dd/MM/yyyy");
 
+    /* --------------------------------
+           Metodo initialize:
+       --------------------------------
+       Llamado automáticamente por JavaFX después de cargar el FXML.
+       Se usa para:
+       1. Configurar el 'Data Binding' de las columnas.
+       2. Aplicar estilos y *callbacks* (doble clic, colores).
+       3. Cargar los datos iniciales.
+    */
     @FXML
     public void initialize() {
 
-        //Mostrrar columna del titulo de la tarea
-        //Se muestran los datos del titulo introducido en la tarea con data.getValue()
+        // 1. CONFIGURACIÓN DE LAS CELDAS (Data Binding)
+        // Se define cómo la propiedad de cada objeto Tarea se mapea a la columna.
         colTitulo.setCellValueFactory(data -> data.getValue().tituloProperty());
-
-        //Mostrar columan descripcion de la tarea.
-        //Se muestran los datos de la descripcion introducida en la tareacon data.getValue()
         colDescripcion.setCellValueFactory(data -> data.getValue().descripcionProperty());
-
-
-        //Mostrar columan fecha de la tarea.
-        //Se muestran los datos de la fecha introducida en la tarea con data.getValue()
         colFecha.setCellValueFactory(data -> data.getValue().fechaProperty());
-
-
-        //Mostrar columan estado de la tarea.
-        //Se muestran los datos del estado introducida en la tarea con data.getValue().estadoProperty()
         colEstado.setCellValueFactory(data -> data.getValue().estadoProperty());
 
-        // Mostrar "Sin fecha establecida" solo en tareas reales (no en filas vacías),
-        // Pasrá siempre que la tarea haya sido creada sin fecha de fin establecida
-        colFecha.setCellFactory(column -> new TableCell<>() {
+        // 2. CONFIGURACIÓN PERSONALIZADA DE LA COLUMNA FECHA (Cell Factory)
+        colFecha.setCellFactory(column -> new TableCell<Tarea, String>() {
             @Override
-            //Creamos la funcion updateItem con la fecha en texto (ya que tenemos numero y caracereres como "/") y un boolean para verificar si está vacio vacio.
             protected void updateItem(String fecha, boolean empty) {
-
-                //Hacemos un update de la fecha, si se encuentra vacia le decimos que el texto es null, que ponga tipo "" que es de texto.
                 super.updateItem(fecha, empty);
-                if (empty || getTableRow() == null || getTableRow().getItem() == null) {
-                    setText(null);
-                    setStyle("");
 
-                    //Hacemos otro condicional para indicar que no hay fecha establecida
+                if (empty) {
+                    // Si la fila está vacía (no hay tarea), no ponemos texto.
+                    setText(null);
+                    setGraphic(null);
+                    setStyle(""); // Limpiar cualquier estilo remanente
                 } else if (fecha == null || fecha.trim().isEmpty()) {
+                    // Lógica para el caso de TAREA con FECHA vacía/no establecida.
                     setText("Sin fecha establecida");
                     setStyle("-fx-text-fill: gray; -fx-font-style: italic;");
-
-                //Hacemos otro condicional, si se ha introducido fecha, poner el texto introducido.
                 } else {
+                    // Mostrar la fecha normal.
                     setText(fecha);
                     setStyle("");
                 }
             }
         });
 
-        // --- CONFIGURAR EL DATEPICKER ---
-        dpFecha.setPromptText("dd/MM/yyyy");
-
-        dpFecha.setConverter(new StringConverter<>() {
-            @Override
-            public String toString(LocalDate date) {
-                return (date != null) ? fmt.format(date) : "";
-            }
-
-            @Override
-            public LocalDate fromString(String string) {
-                if (string == null || string.trim().isEmpty()) return null;
-                try {
-                    return LocalDate.parse(string, fmt);
-                } catch (Exception e) {
-                    return null;
-                }
-            }
-        });
-
-        // Bloquear letras o caracteres inválidos (solo números y '/')
-        dpFecha.getEditor().textProperty().addListener((obs, oldText, newText) -> {
-            if (newText != null && !newText.matches("[0-9/]*")) {
-                dpFecha.getEditor().setText(oldText);
-            }
-        });
-
-        // --- CUANDO SE SELECCIONA UNA TAREA ---
-        tablaTareas.getSelectionModel().selectedItemProperty().addListener((obs, oldSel, newSel) -> {
-            if (newSel != null) {
-                textoTitulo.setText(newSel.getTitulo());
-                textoDescripcion.setText(newSel.getDescripcion());
-
-                // Intentar convertir la fecha correctamente (String → LocalDate)
-                try {
-                    if (newSel.getFecha() != null && !newSel.getFecha().equals("Sin fecha establecida")) {
-                        LocalDate fecha = LocalDate.parse(newSel.getFecha(), fmt);
-                        dpFecha.setValue(fecha);
-                    } else {
-                        dpFecha.setValue(null);
-                    }
-                } catch (Exception e) {
-                    dpFecha.setValue(null);
-                }
-
-                cbEstado.setValue(newSel.getEstado());
-            }
-        });
-
-
-
-        //Habilitamos el modo de seleccion multiple de tareas en la tabla
+        // Habilitar la selección de múltiples filas para la eliminación masiva.
         tablaTareas.getSelectionModel().setSelectionMode(SelectionMode.MULTIPLE);
-        //Mensaje para avisar que no hay tareas creadas y se debe crear una nueva.
-        tablaTareas.setPlaceholder(new Label("No hay tareas disponibles. Usa el botón Agregar para crear una nueva."));
+        // Mensaje cuando la tabla está vacía.
+        tablaTareas.setPlaceholder(new Label("No hay tareas disponibles. Usa el botón +"));
 
-
-        // Estados del selector
-        cbEstado.setItems(FXCollections.observableArrayList("Pendiente", "En curso", "Completada"));
-        cbEstado.setValue("Pendiente");
-
-        // Inicializar base y cargar tareas
+        // Se asegura de que la estructura de la DB exista. (Idempotente, ya se llamó en LoginController, pero no está de más.)
         Database.ensureInitialized();
-        tablaTareas.setItems(listaTareas);
+
+        // ------------------------------------------------------------
+        // CARGAR TAREAS EN LA TABLA
+        // ------------------------------------------------------------
         cargarTareas();
+        tablaTareas.setItems(listaTareas); // Enlazar la ObservableList a la tabla.
 
-        // Colorear filas según estado
-        tablaTareas.setRowFactory(tv -> new TableRow<Tarea>() {
-            @Override
-            protected void updateItem(Tarea tarea, boolean empty) {
-                super.updateItem(tarea, empty);
+        // ------------------------------------------------------------
+        // ROWFACTORY: LÓGICA DE COLORES POR ESTADO + EVENTO DOBLE CLIC
+        // ------------------------------------------------------------
+        tablaTareas.setRowFactory(tv -> {
+            TableRow<Tarea> row = new TableRow<>() {
+                @Override
+                protected void updateItem(Tarea item, boolean empty) {
+                    super.updateItem(item, empty);
 
-                if (empty || tarea == null) {
-                    setStyle("");
-                    return;
+                    if (item == null || empty) {
+                        setStyle(""); // Limpiar estilo si no hay fila
+                    } else {
+                        // Aplica un color de fondo diferente a la fila basándose en el estado de la tarea.
+                        String estado = item.getEstado();
+
+                        // Protección contra estados nulos que podrían causar un fallo.
+                        if (estado == null) {
+                            estado = "sin estado";
+                        }
+
+                        // Uso de `switch` en la cadena de texto para aplicar estilos CSS.
+                        switch (estado.toLowerCase()) {
+                            case "completada":
+                                setStyle("-fx-background-color: #b6f7b0;"); // Verde
+                                break;
+                            case "pendiente":
+                                setStyle("-fx-background-color: #fff4a3;"); // Amarillo
+                                break;
+                            case "en curso":
+                                setStyle("-fx-background-color: #cfe3ff;"); // Azul
+                                break;
+                            default:
+                                setStyle("-fx-background-color: #ffd4a3;"); // Naranja suave
+                                break;
+                        }
+                    }
                 }
+            };
 
-                String estado = tarea.getEstado();
-
-                if (estado == null || estado.trim().isEmpty()) {
-                    // Estado sin definir → pintar fila de naranja suave
-                    setStyle("-fx-background-color: #ffd4a3;");
-                    return;
+            // Evento de doble clic: Si se hace doble clic en una fila, abre el formulario para editar.
+            row.setOnMouseClicked(event -> {
+                if (event.getClickCount() == 2 && !row.isEmpty()) {
+                    abrirFormularioTarea(row.getItem());
                 }
+            });
 
-                switch (estado.toLowerCase()) {
-                    case "completada":
-                        setStyle("-fx-background-color: #b6f7b0;");  // pintar fila en verde suave si la tarea está completada
-                        break;
-
-                    case "pendiente":
-                        setStyle("-fx-background-color: #fff4a3;");  // pintar fila en amarillo suave si la tarea está pendiente
-                        break;
-
-                    case "en curso":
-                        setStyle("-fx-background-color: #cfe3ff;");  // pintar fila en azul claro suave si la tarea está en curso
-                        break;
-
-                    default:
-                        setStyle("");
-                }
-            }
+            return row;
         });
 
-        //Crear la leyenda al final del initialize
+        // Generar la leyenda de colores debajo de la tabla.
         crearLeyendaColores();
-
     }
 
-    private void crearLeyendaColores() {
-        if (contenedorLeyenda == null) return;
+    /* ----------------------------------------------------
+       Metodo abrirFormularioTarea
+       ----------------------------------------------------
+       Método utilitario para abrir la ventana de TaskForm.fxml (edición/creación).
+       Implementa el patrón de Diseño **Modal**, bloqueando la ventana principal.
+       Utiliza un patrón de **Callback (función de retorno)**:
+       pasa el método `cargarTareas` para que el TaskFormController lo llame al guardar,
+       actualizando la tabla automáticamente.
+    */
+    private void abrirFormularioTarea(Tarea tarea) {
+        try {
+            FXMLLoader loader = new FXMLLoader(getClass().getResource("/view/taskForm.fxml"));
+            Parent root = loader.load();
 
-        contenedorLeyenda.setSpacing(10);
+            // Obtenemos el controlador del formulario.
+            TaskFormController controller = loader.getController();
+            // Inyectamos la tarea a editar (si es null, es una nueva tarea) y el callback.
+            controller.configurar(tarea, this::cargarTareas);
 
-        contenedorLeyenda.getChildren().setAll(
-                crearItemLeyenda("Completada", "#b6f7b0"),
-                crearItemLeyenda("En curso",   "#cfe3ff"),
-                crearItemLeyenda("Pendiente",  "#fff4a3"),
-                crearItemLeyenda("Sin estado", "#ffd4a3")
-        );
+            Stage stage = new Stage();
+            // Modalidad: APPLICATION_MODAL bloquea la interacción con la ventana principal.
+            stage.initModality(Modality.APPLICATION_MODAL);
+            stage.setResizable(false);
+            stage.setTitle(tarea == null ? "Nueva tarea" : "Editar tarea");
+            stage.setScene(new Scene(root));
+            stage.show();
+
+        } catch (Exception e) {
+            e.printStackTrace();
+            mostrarAlerta("Error", "No se pudo abrir la ventana de edición.");
+        }
     }
 
-    private HBox crearItemLeyenda(String texto, String colorHex) {
-        HBox box = new HBox(5);
+    /* ----------------------------------------------------
+           Métodos de acción (Botones)
+       ---------------------------------------------------- */
 
-        Region color = new Region();
-        color.setPrefSize(16, 16);
-        color.setStyle(
-                "-fx-background-color: " + colorHex + ";" +
-                        "-fx-border-color: #888;" +
-                        "-fx-border-radius: 3;" +
-                        "-fx-background-radius: 3;"
-        );
-
-        Label label = new Label(texto);
-
-        box.getChildren().addAll(color, label);
-        return box;
-
-    }
-
-    // --- AGREGAR TAREA ---
     @FXML
     private void agregarTarea() {
-        String titulo = textoTitulo.getText();
-        String descripcion = textoDescripcion.getText();
-        String estado = cbEstado.getValue();
-        LocalDate fecha = dpFecha.getValue();
+        abrirFormularioTarea(null); // Pasa `null` para indicar que es una tarea nueva.
+    }
 
-        if (titulo == null || titulo.isBlank()) {
-            mostrarAlerta("Datos incompletos", "Una tarea debe tener un título.");
+    @FXML
+    private void modificarTarea() {
+        ObservableList<Tarea> seleccionadas = tablaTareas.getSelectionModel().getSelectedItems();
+
+        if (seleccionadas.isEmpty()) {
+            mostrarAlerta("Aviso", "Selecciona una tarea para modificar.");
             return;
         }
 
-        String fechaTexto = (fecha == null) ? "Sin fecha establecida" : fecha.format(fmt);
-
-        if ("Completada".equalsIgnoreCase(estado)) {
-            Alert confirmar = new Alert(Alert.AlertType.CONFIRMATION);
-            confirmar.setTitle("Confirmar creación");
-            confirmar.setHeaderText("Confirmación TaskEasy");
-            confirmar.setContentText("¿Estás seguro de que quieres crear una tarea nueva con estado 'Completada'?");
-            if (confirmar.showAndWait().orElse(ButtonType.CANCEL) != ButtonType.OK) return;
+        if (seleccionadas.size() > 1) {
+            // Se fuerza a que solo se pueda modificar una tarea a la vez.
+            mostrarAlerta("Aviso", "Solo puedes modificar las tareas de una en una. Por favor, selecciona solo una.");
+            return;
         }
 
-        // Insertar los datos proporcionados por pantalla en la base de datos SQLite
-        Database.ejecutar(
-                "INSERT INTO tareas (titulo, descripcion, fecha, estado, usuario_id) VALUES (?, ?, ?, ?, ?)",
-                titulo, descripcion, fecha, estado, Session.getUsuarioActual()
-                );
-
-
-        cargarTareas();
-        limpiarCampos();
+        // Si solo hay una seleccionada, abre el formulario.
+        Tarea seleccionada = seleccionadas.get(0);
+        abrirFormularioTarea(seleccionada);
     }
 
-    // --- ELIMINAR TAREA ---
     @FXML
-    private void eliminarTarea() {
+    private void eliminarTarea() throws SQLException {
         ObservableList<Tarea> seleccionadas = tablaTareas.getSelectionModel().getSelectedItems();
 
         if (seleccionadas.isEmpty()) {
@@ -268,37 +227,42 @@ public class MainController {
             return;
         }
 
+        // Muestra un diálogo de confirmación antes de la operación destructiva.
         Alert confirmar = new Alert(Alert.AlertType.CONFIRMATION);
         confirmar.setTitle("Confirmar eliminación");
         confirmar.setHeaderText("Eliminar tareas seleccionadas");
-        confirmar.setContentText("¿Seguro que quieres eliminar las tareas seleccionadas?");
+
         if (confirmar.showAndWait().orElse(ButtonType.CANCEL) != ButtonType.OK) return;
 
+        // Itera sobre las seleccionadas y llama al método DAO (`Database.ejecutar`) para eliminarlas una a una.
         for (Tarea tarea : seleccionadas) {
             Database.ejecutar("DELETE FROM tareas WHERE id = ?", tarea.getId());
         }
 
+        // Una vez eliminadas, recarga la tabla para reflejar los cambios.
         cargarTareas();
     }
 
-
-    // --- CARGAR TAREAS ---
+    /* ----------------------------------------------------
+           Metodo cargarTareas
+       ----------------------------------------------------
+       Método clave para la persistencia. Se comunica con la capa DAO (`Database`).
+       Carga las tareas del usuario logueado (`Session.getUsuarioActual()`).
+    */
     @FXML
     private void cargarTareas() {
-        listaTareas.clear();
-
+        listaTareas.clear(); // Limpiar la lista actual para evitar duplicados.
         int usuarioId = Session.getUsuarioActual();
+        if (usuarioId <= 0) return; // Si no hay sesión iniciada, sale.
 
-        // Si por algún motivo no hay usuario logueado, no cargamos nada
-        if (usuarioId <= 0) {
-            System.out.println("⚠️ No hay usuario activo. No se cargan tareas.");
-            return;
-        }
-
-        try (ResultSet rs = Database.consultar(
-                "SELECT * FROM tareas WHERE usuario_id = ? ORDER BY fecha ASC", usuarioId)) {
-
+        // Se usa `try-with-resources` para asegurar el cierre del ResultSet y la conexión.
+        try (java.sql.ResultSet rs = Database.consultar(
+                // Consulta las tareas asociadas al ID del usuario actual.
+                "SELECT * FROM tareas WHERE usuario_id = ? ORDER BY fecha ASC",
+                usuarioId
+        )) {
             while (rs.next()) {
+                // Mapeo de la fila del ResultSet a un objeto Tarea.
                 listaTareas.add(new Tarea(
                         rs.getInt("id"),
                         rs.getString("titulo"),
@@ -307,160 +271,114 @@ public class MainController {
                         rs.getString("estado")
                 ));
             }
-
-            // Actualizar la vista de la tabla
-            tablaTareas.setItems(listaTareas);
-
         } catch (SQLException e) {
             e.printStackTrace();
+            mostrarAlerta("Error", "No se pudieron cargar las tareas desde la base de datos.");
         }
     }
 
-
-    // --- MODIFICAR TAREA ---
-    @FXML
-    private void modificarTarea() {
-        Tarea seleccionada = tablaTareas.getSelectionModel().getSelectedItem();
-        if (seleccionada == null) {
-            mostrarAlerta("Aviso", "Selecciona una tarea para modificar.");
-            return;
-        }
-
-        String nuevoTitulo = textoTitulo.getText().trim();
-        String nuevaDescripcion = textoDescripcion.getText().trim();
-        LocalDate nuevaFecha = dpFecha.getValue();
-        String nuevoEstado = cbEstado.getValue();
-
-        if (nuevoTitulo.isEmpty()) {
-            mostrarAlerta("Error", "El título no puede estar vacío.");
-            return;
-        }
-
-        // Mantener fecha anterior si no se cambia
-        String fechaTexto = (nuevaFecha == null)
-                ? seleccionada.getFecha()
-                : nuevaFecha.format(fmt);
-
-        // Mantener estado anterior si no se cambia
-        if (nuevoEstado == null || nuevoEstado.isBlank()) {
-            nuevoEstado = seleccionada.getEstado();
-        }
-
-        Database.ejecutar(
-                "UPDATE tareas SET titulo = ?, descripcion = ?, fecha = ?, estado = ? WHERE id = ?",
-                nuevoTitulo, nuevaDescripcion, fechaTexto, nuevoEstado, seleccionada.getId()
-        );
-
-        mostrarAlerta("Éxito", "La tarea ha sido modificada correctamente.");
-        cargarTareas();
-        limpiarCampos();
-    }
+    /* ----------------------------------------------------
+           Métodos de Sesión y Configuración
+       ---------------------------------------------------- */
 
     @FXML
     private void cerrarSesion() {
-        Alert confirm = new Alert(Alert.AlertType.CONFIRMATION);
-        confirm.setTitle("Cerrar sesión");
-        confirm.setHeaderText("¿Deseas cerrar tu sesión actual?");
-
-        if (confirm.showAndWait().orElse(ButtonType.CANCEL) != ButtonType.OK) {
-            return; // el usuario canceló
-        }
-
         try {
-            // Limpia el usuario activo en la sesión
+            // 1. Limpia la sesión actual.
             Session.setUsuarioActual(0);
-
-            // Cierra la ventana actual
-            Stage currentStage = (Stage) tablaTareas.getScene().getWindow();
-            currentStage.close();
-
-            // Carga la ventana de login
+            // 2. Cierra la ventana principal actual.
+            Stage current = (Stage) tablaTareas.getScene().getWindow();
+            current.close();
+            // 3. Abre una nueva instancia de la ventana de login.
             FXMLLoader loader = new FXMLLoader(getClass().getResource("/view/login.fxml"));
-            Stage loginStage = new Stage();
-            loginStage.setTitle("TaskEasy — Iniciar sesión");
-            loginStage.setScene(new Scene(loader.load()));
-            loginStage.show();
+            Stage login = new Stage();
+            login.setScene(new Scene(loader.load()));
+            login.show();
 
         } catch (Exception e) {
             e.printStackTrace();
-            Alert error = new Alert(Alert.AlertType.ERROR);
-            error.setTitle("Error");
-            error.setHeaderText("No se pudo cerrar sesión");
-            error.setContentText("Ha ocurrido un error al intentar volver al login.");
-
-            error.showAndWait();
         }
-    }
-
-    @FXML
-    private void nuevaTarea() {
-        limpiarCampos();
-        mostrarAlerta("Nueva tarea", "Puedes introducir los datos de una nueva tarea.");
-    }
-
-    @FXML
-    private void guardarCambios() {
-        mostrarAlerta("Guardar cambios", "Tareas guardadas.\n\n Las tareas se guardan automáticamente en la base de datos:\n Al crear, modificar o eliminar una tarea.");
     }
 
     @FXML
     private void salirAplicacion() {
-        Alert confirm = new Alert(Alert.AlertType.CONFIRMATION);
-        confirm.setTitle("Salir de TaskEasy");
-        confirm.setHeaderText("¿Seguro que deseas cerrar la aplicación?");
-        if (confirm.showAndWait().orElse(ButtonType.CANCEL) == ButtonType.OK) {
-            Platform.exit();
-        }
+        // Cierra la aplicación JavaFX completamente.
+        Platform.exit();
     }
 
+
+    /* ----------------------------------------------------
+             Metodo cambiarTema
+         ----------------------------------------------------
+         Alterna entre las hojas de estilo CSS para el modo claro y oscuro.
+         La lógica se basa en la propiedad `dark-mode` almacenada en la Scene.
+     */
     @FXML
     private void cambiarTema() {
-
         Scene scene = tablaTareas.getScene();
-        if (scene == null) return;
+        if (scene == null) return; // Protección
 
-        // limpiar estilos anteriores
-        scene.getStylesheets().clear();
+        // Determinar el estado actual del modo oscuro.
+        boolean esModoOscuroActual = scene.getProperties().getOrDefault("dark-mode", false).equals(true);
 
-        // saber si ya estamos en modo oscuro
-        boolean modoOscuro = scene.getProperties().getOrDefault("dark-mode", false).equals(true);
+        // Obtener las rutas de los archivos CSS.
+        String temaClaroPath = getClass().getResource("/css/temaClaro.css").toExternalForm();
+        String temaOscuroPath = getClass().getResource("/css/temaOscuro.css").toExternalForm();
 
-        if (modoOscuro) {
-            // aplicar tema claro
-            scene.getStylesheets().add(
-                    getClass().getResource("/css/temaClaro.css").toExternalForm()
-            );
+        // LÓGICA DE SWITCH: Quitar uno y poner el otro.
+        if (esModoOscuroActual) {
+            // Cambiar a CLARO
+            scene.getStylesheets().remove(temaOscuroPath);
+            scene.getStylesheets().add(temaClaroPath);
             scene.getProperties().put("dark-mode", false);
 
         } else {
-            // aplicar tema oscuro
-            scene.getStylesheets().add(
-                    getClass().getResource("/css/temaOscuro.css").toExternalForm()
-            );
+            // Cambiar a OSCURO
+            scene.getStylesheets().remove(temaClaroPath);
+            scene.getStylesheets().add(temaOscuroPath);
             scene.getProperties().put("dark-mode", true);
         }
     }
 
-
     @FXML
     private void mostrarAcercaDe() {
-        Alert acercaDe = new Alert(Alert.AlertType.INFORMATION);
-        acercaDe.setTitle("Acerca de TaskEasy");
-        acercaDe.setHeaderText("Gestor de tareas - TaskEasy");
-        acercaDe.setContentText("Versión 1.0\nDesarrollado por Aitor Benito Heras\nProyecto Final CFGS DAM - Ilerna Online");
-        acercaDe.showAndWait();
+        mostrarAlerta("Acerca de TaskEasy",
+                "Versión 1.0\nDesarrollado por Aitor Benito Heras\nProyecto Final CFGS DAM - Ilerna Online");
     }
 
+    /* ----------------------------------------------------
+           Métodos Utilitarios (Leyenda y Alerta)
+       ---------------------------------------------------- */
 
-    // --- LIMPIAR CAMPOS ---
-    private void limpiarCampos() {
-        textoTitulo.clear();
-        textoDescripcion.clear();
-        dpFecha.setValue(null);
-        cbEstado.setValue(null);
+    // Construye dinámicamente la leyenda de colores y la añade al contenedor HBox.
+    private void crearLeyendaColores() {
+        if (contenedorLeyenda == null) return;
+
+        contenedorLeyenda.setSpacing(10);
+        contenedorLeyenda.getChildren().setAll(
+                crearItemLeyenda("Completada", "#b6f7b0"),
+                crearItemLeyenda("En curso", "#cfe3ff"),
+                crearItemLeyenda("Pendiente", "#fff4a3"),
+                crearItemLeyenda("Sin estado", "#ffd4a3")
+        );
     }
 
-    // --- ALERTAS ---
+    // Crea un componente HBox simple con un bloque de color y una etiqueta de texto.
+    private HBox crearItemLeyenda(String texto, String colorHex) {
+        HBox box = new HBox(5);
+        Region color = new Region();
+        color.setPrefSize(16, 16);
+        color.setStyle("-fx-background-color:" + colorHex + "; -fx-border-color:#888;");
+        box.getChildren().addAll(color, new Label(texto));
+        return box;
+    }
+
+    @FXML
+    private void nuevaTareaFlotante() {
+        // Asume que este metodo está vinculado a un Floating Action Button (FAB) o similar.
+        abrirFormularioTarea(null);
+    }
+
     private void mostrarAlerta(String titulo, String mensaje) {
         Alert alert = new Alert(Alert.AlertType.INFORMATION);
         alert.setTitle(titulo);

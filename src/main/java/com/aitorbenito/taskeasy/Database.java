@@ -1,33 +1,42 @@
 package com.aitorbenito.taskeasy;
 
-/**Importamos java.sql para que se pueda usar JDBC y trabajar con sqlite en la base de datos.
+/* Importamos java.sql para que se pueda usar JDBC y trabajar con sqlite en la base de datos.
   Sin este import no podremos contectarnos a la base de datos ni ejecutar comandos de sql necesarios para el uso de la app*/
 import java.sql.*;
 
-/**Importamos java.time.LocalDate para recoger la fecha y convertirla en texto*/
+/* Importamos java.time.LocalDate para recoger la fecha y convertirla en texto*/
 import java.time.LocalDate;
 
-/** Importamos java.time.format.DateTimeFormater para el formato de la fecha de las tareas.*/
+/* Importamos java.time.format.DateTimeFormater para el formato de la fecha de las tareas.*/
 import java.time.format.DateTimeFormatter;
 
+/*----------------------------
+      Clase Database
+  ----------------------------
+Esta clase es la responsable de todas la comunicacion con la base de datos SQLite. Es la unica clase que controla SQL,
+ así separamos la parte de la persistencia de los datos de la parte de los controllers.
 
+ Esta arquitectura es parte del patrón DAO (Data Access Object)*/
 public class Database {
 
-    /**
-     * Ruta del archivo SQLite donde se guardará la base de datos.
-     * Si el archivo no existe, SQLite lo crea automáticamente.
+    /*
+     Ruta del archivo SQLite donde se guardará la base de datos.
+     Si el archivo no existe, SQLite lo crea automáticamente.
      */
     private static final String URL = "jdbc:sqlite:taskeasy.db";
 
-    /**
-     * Metodo encargado de inicializar la base de datos.
-     * <p>
-     * Su función principal es:
-     * - Crear las tablas necesarias si no existen.
-     * - Añadir columnas nuevas si son necesarias (migración de base de datos).
-     * - Insertar datos iniciales en caso de primera ejecución.
-     * <p>
-     * Este metodo se ejecuta UNA vez al iniciar la aplicación.
+    /*-------------------------
+      Metodo ensureInitialized
+      -------------------------
+
+     Metodo encargado de inicializar la base de datos.
+
+     Su función principal es:
+     - Crear las tablas necesarias si no existen.
+     - Añadir columnas nuevas si son necesarias (migración de base de datos).
+     - Insertar datos iniciales en caso de primera ejecución.
+
+     Este metodo se ejecuta UNA vez al iniciar la aplicación.
      */
     public static void ensureInitialized() {
 
@@ -39,38 +48,38 @@ public class Database {
                 Statement stmt = conexion.createStatement()
         ) {
 
-            /** -------------------------------------------
-             CREACIÓN DE LA TABLA 'tareas'
-             -------------------------------------------
+            /* -------------------------------------------
+               CREACIÓN DE LA TABLA 'tareas'
+               -------------------------------------------
              Esta tabla almacena todas las tareas creadas por los usuarios.
              Usamos IF NOT EXISTS porque evita que nos de error si la tabla ya existe.*/
 
             stmt.execute("""
                         CREATE TABLE IF NOT EXISTS tareas (
                             id INTEGER PRIMARY KEY AUTOINCREMENT,   -- Identificador único de la tarea
-                            titulo TEXT NOT NULL,                  -- Título obligatorio
-                            descripcion TEXT,                      -- Texto opcional
-                            fecha TEXT,                            -- Fecha en formato dd/MM/yyyy
-                            estado TEXT                            -- Estado de la tarea
+                            titulo TEXT NOT NULL,                   -- Título obligatorio
+                            descripcion TEXT,                       -- Texto opcional
+                            fecha TEXT,                             -- Fecha en formato dd/MM/yyyy
+                            estado TEXT                             -- Estado de la tarea
                         );
                     """);
 
-            /** -------------------------------------------
+            /* -------------------------------------------
              CREACIÓN DE LA TABLA 'usuarios'
              -------------------------------------------
              Esta tabla permite tener múltiples usuarios,
              cada uno con su propia lista de tareas*/
             stmt.execute("""
                         CREATE TABLE IF NOT EXISTS usuarios (
-                            id INTEGER PRIMARY KEY AUTOINCREMENT,  -- Identificador de usuario
-                            nombre TEXT NOT NULL,                  -- Nombre visible
-                            email TEXT UNIQUE NOT NULL,            -- Email único
-                            password TEXT NOT NULL                 -- Contraseña cifrada o texto (según implementación)
+                            id INTEGER PRIMARY KEY AUTOINCREMENT,       -- Identificador de usuario
+                            nombre TEXT UNIQUE NOT NULL,                -- Nombre visible
+                            email TEXT UNIQUE NOT NULL,                 -- Email único
+                            password TEXT NOT NULL                      -- Contraseña cifrada o texto (según implementación)
                         );
                     """);
 
 
-            /** -------------------------------------------
+            /* -------------------------------------------
              AÑADIR COLUMNA usuario_id A 'tareas' SI NO EXISTE
              -------------------------------------------
              Esta parte es importante para la evolución del sistema.
@@ -91,32 +100,16 @@ public class Database {
                     }
                 }
 
-                // Si no existe → la añadimos automáticamente
+                // Si no existe, la añadimos automáticamente y le damos un valor
                 if (!existeUsuarioId) {
                     stmt.execute("ALTER TABLE tareas ADD COLUMN usuario_id INTEGER DEFAULT 0;");
                     System.out.println("✅ Columna 'usuario_id' añadida correctamente a la tabla tareas.");
                 }
             }
 
-            /** -------------------------------------------
-             INSERTAR UNA TAREA DE EJEMPLO SI LA TABLA ESTÁ VACÍA
-             -------------------------------------------
-             Esto mejora la experiencia del usuario al iniciar la app por primera vez.*/
-            ResultSet rs = stmt.executeQuery("SELECT COUNT(*) AS total FROM tareas;");
-
-            // Si no hay ninguna tarea → insertamos la “tarea de bienvenida”
-            if (rs.next() && rs.getInt("total") == 0) {
-                stmt.executeUpdate("""
-                            INSERT INTO tareas (titulo, descripcion, fecha, estado)
-                            VALUES ('Bienvenido a TaskEasy',
-                                    'Puedes editar o eliminar esta tarea. Usa el botón Agregar para crear nuevas.',
-                                    'Sin fecha establecida',
-                                    'Pendiente');
-                        """);
-            }
 
         } catch (SQLException e) {
-            /** Si ocurre cualquier error al modificar datos en la base de datos, imprimimos el error.
+            /* Si ocurre cualquier error al modificar datos en la base de datos, imprimimos el error.
              Es importante para detectar errores en tiempo de desarrollo.*/
             e.printStackTrace();
 
@@ -125,60 +118,68 @@ public class Database {
 
 
 
-    /** Ejecuta sentencias INSERT, UPDATE o DELETE*/
-    public static void ejecutar(String sql, Object... params) {
+    /* ----------------------
+        Metodo ejecutar:
+       ----------------------
+       Sirve para ejecutar sentencias INSERT, UPDATE o DELETE*/
+    public static void ejecutar(String sql, Object... params) throws SQLException {
 
         try (
-                // Abre una conexión temporal a la base de datos usando la URL definida
+                //Recursos: Conexión y PreparedStatement, cerrados automáticamente.
                 Connection conn = DriverManager.getConnection(URL);
-
-                // Prepara la sentencia SQL con parámetros (?) para evitar inyección SQL
                 PreparedStatement stmt = conn.prepareStatement(sql)
         ) {
 
-            // Formateador para convertir LocalDate al formato dd/MM/yyyy antes de guardarlo
             DateTimeFormatter fmt = DateTimeFormatter.ofPattern("dd/MM/yyyy");
 
-            // Recorremos los parámetros enviados al método para insertarlos en la consulta SQL
+            // Iteramos sobre los parámetros establecidos para asignarlos a los datos concretos del SQL.
             for (int i = 0; i < params.length; i++) {
-
                 Object param = params[i];
 
-                // Si el parámetro es una fecha LocalDate, se convierte a texto con formato personalizado
+                // Convertimos objetos LocalDate al formato de texto deseado (dd/MM/yyyy)
                 if (param instanceof LocalDate) {
-                    stmt.setString(i + 1, ((LocalDate) param).format(fmt)); // Guardar LocalDate como texto legible
+                    stmt.setString(i + 1, ((LocalDate) param).format(fmt));
                 } else {
-                    // Para cualquier otro tipo (String, Integer, etc.)
+                    // Para String, Integer, etc., usamos setObject
                     stmt.setObject(i + 1, param);
                 }
             }
 
-            // Ejecuta la sentencia SQL (INSERT, UPDATE o DELETE)
             stmt.executeUpdate();
 
         } catch (SQLException e) {
-            // Muestra por consola el error si sucede algo con la base de datos
-            e.printStackTrace();
+            /* Si se detecta alguna excepcion, con "throw e", se lanza la excepción para que el Controlador
+            (ej. LoginController) pueda informar al usuario del fallo.*/
+            throw e;
         }
     }
 
+    /*---------------------------
+        Metodo consultar
+      ---------------------------
+      Ejecuta consultas SELECT y devuelve un ResultSet
+      */
 
-    // Ejecuta consultas SELECT y devuelve un ResultSet
     public static ResultSet consultar(String sql, Object... params) throws SQLException {
-
-        // Abre una conexión directa a la base de datos
+        /* La conexión debe manejarse con cuidado, ya que el ResultSet devuelto
+           depende de esta conexión y no se puede cerrar automáticamente aquí*/
         Connection conn = DriverManager.getConnection(URL);
 
-        // Prepara la consulta SQL con parámetros
-        PreparedStatement ps = conn.prepareStatement(sql);
+        try {
+            PreparedStatement ps = conn.prepareStatement(sql);
 
-        // Inserta los parámetros en la consulta
-        for (int i = 0; i < params.length; i++) {
-            ps.setObject(i + 1, params[i]);
+            /* Asignación de parámetros (para prevenir Inyección SQL)*/
+            for (int i = 0; i < params.length; i++) {
+                ps.setObject(i + 1, params[i]);
+            }
+
+            // Devolvemos el resultado. El llamador (MainController) debe cerrar el resultSet y la conexion.
+            return ps.executeQuery();
+
+        } catch (SQLException e) {
+            // MUY IMPORTANTE: Si algo falla al crear el PreparedStatement, cerramos la conexión para evitar fugas
+            conn.close();
+            throw e;
         }
-
-        // Ejecuta la consulta y devuelve un ResultSet con los datos obtenidos
-        // (La conexión NO se cierra aquí porque el ResultSet depende de ella)
-        return ps.executeQuery();
     }
 }
