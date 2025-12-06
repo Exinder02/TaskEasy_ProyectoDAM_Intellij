@@ -26,7 +26,7 @@ public class Database {
     private static final String URL = "jdbc:sqlite:taskeasy.db";
 
     /*-------------------------
-      Metodo ensureInitialized
+      Metodo asegurarInicio
       -------------------------
 
      Metodo encargado de inicializar la base de datos.
@@ -38,14 +38,14 @@ public class Database {
 
      Este metodo se ejecuta UNA vez al iniciar la aplicación.
      */
-    public static void ensureInitialized() {
+    public static void asegurarInicio() {
 
         try (
                 // Abrimos la conexión con SQLite
                 Connection conexion = DriverManager.getConnection(URL);
 
                 // Creamos un objeto Statement para ejecutar sentencias SQL simples
-                Statement stmt = conexion.createStatement()
+                Statement stat = conexion.createStatement()
         ) {
 
             /* -------------------------------------------
@@ -54,7 +54,7 @@ public class Database {
              Esta tabla almacena todas las tareas creadas por los usuarios.
              Usamos IF NOT EXISTS porque evita que nos de error si la tabla ya existe.*/
 
-            stmt.execute("""
+            stat.execute("""
                         CREATE TABLE IF NOT EXISTS tareas (
                             id INTEGER PRIMARY KEY AUTOINCREMENT,   -- Identificador único de la tarea
                             titulo TEXT NOT NULL,                   -- Título obligatorio
@@ -69,7 +69,7 @@ public class Database {
              -------------------------------------------
              Esta tabla permite tener múltiples usuarios,
              cada uno con su propia lista de tareas*/
-            stmt.execute("""
+            stat.execute("""
                         CREATE TABLE IF NOT EXISTS usuarios (
                             id INTEGER PRIMARY KEY AUTOINCREMENT,       -- Identificador de usuario
                             nombre TEXT UNIQUE NOT NULL,                -- Nombre visible
@@ -87,23 +87,23 @@ public class Database {
              no tendría esta columna, así que debemos añadirla.
 
              PRAGMA table_info devuelve el esquema de la tabla.*/
-            try (ResultSet rs = stmt.executeQuery("PRAGMA table_info(tareas);")) {
+            try (ResultSet rs = stat.executeQuery("PRAGMA table_info(tareas);")) {
 
-                boolean existeUsuarioId = false;
+                boolean existeIdUsuario = false;
 
                 // Recorremos la lista de columnas existentes en la tabla
                 while (rs.next()) {
                     // Si ya existe una columna llamada usuario_id → no la añadimos
                     if ("usuario_id".equalsIgnoreCase(rs.getString("name"))) {
-                        existeUsuarioId = true;
+                        existeIdUsuario = true;
                         break;
                     }
                 }
 
                 // Si no existe, la añadimos automáticamente y le damos un valor
-                if (!existeUsuarioId) {
-                    stmt.execute("ALTER TABLE tareas ADD COLUMN usuario_id INTEGER DEFAULT 0;");
-                    System.out.println("✅ Columna 'usuario_id' añadida correctamente a la tabla tareas.");
+                if (!existeIdUsuario) {
+                    stat.execute("ALTER TABLE tareas ADD COLUMN usuario_id INTEGER DEFAULT 0;");
+                    System.out.println("Columna 'usuario_id' añadida correctamente a la tabla tareas.");
                 }
             }
 
@@ -126,8 +126,8 @@ public class Database {
 
         try (
                 //Recursos: Conexión y PreparedStatement, cerrados automáticamente.
-                Connection conn = DriverManager.getConnection(URL);
-                PreparedStatement stmt = conn.prepareStatement(sql)
+                Connection conexion = DriverManager.getConnection(URL);
+                PreparedStatement prepstat = conexion.prepareStatement(sql)
         ) {
 
             DateTimeFormatter fmt = DateTimeFormatter.ofPattern("dd/MM/yyyy");
@@ -138,14 +138,14 @@ public class Database {
 
                 // Convertimos objetos LocalDate al formato de texto deseado (dd/MM/yyyy)
                 if (param instanceof LocalDate) {
-                    stmt.setString(i + 1, ((LocalDate) param).format(fmt));
+                    prepstat.setString(i + 1, ((LocalDate) param).format(fmt));
                 } else {
                     // Para String, Integer, etc., usamos setObject
-                    stmt.setObject(i + 1, param);
+                    prepstat.setObject(i + 1, param);
                 }
             }
 
-            stmt.executeUpdate();
+            prepstat.executeUpdate();
 
         } catch (SQLException e) {
             /* Si se detecta alguna excepcion, con "throw e", se lanza la excepción para que el Controlador
@@ -153,6 +153,8 @@ public class Database {
             throw e;
         }
     }
+
+
 
     /*---------------------------
         Metodo consultar
@@ -163,23 +165,51 @@ public class Database {
     public static ResultSet consultar(String sql, Object... params) throws SQLException {
         /* La conexión debe manejarse con cuidado, ya que el ResultSet devuelto
            depende de esta conexión y no se puede cerrar automáticamente aquí*/
-        Connection conn = DriverManager.getConnection(URL);
+        Connection conexion = DriverManager.getConnection(URL);
 
         try {
-            PreparedStatement ps = conn.prepareStatement(sql);
+            PreparedStatement prepstat = conexion.prepareStatement(sql);
 
             /* Asignación de parámetros (para prevenir Inyección SQL)*/
             for (int i = 0; i < params.length; i++) {
-                ps.setObject(i + 1, params[i]);
+                prepstat.setObject(i + 1, params[i]);
             }
 
             // Devolvemos el resultado. El llamador (MainController) debe cerrar el resultSet y la conexion.
-            return ps.executeQuery();
+            return prepstat.executeQuery();
 
         } catch (SQLException e) {
             // MUY IMPORTANTE: Si algo falla al crear el PreparedStatement, cerramos la conexión para evitar fugas
-            conn.close();
+            conexion.close();
             throw e;
         }
+
     }
+
+
+    /* ----------------------------------
+    Metodo existe
+    ----------------------------------
+    Metodo para verificar que ese campo es único.
+    Este metodo está en la clase Database para centralizar toda la lógica SQL,
+    siguiendo mejor el patrón DAO.
+ */
+    public static boolean existe(String campo, String valor) {
+        // Uso de try-with-resources para asegurar el cierre automático de Connection, PreparedStatement y ResultSet.
+        try (var conn = java.sql.DriverManager.getConnection("jdbc:sqlite:taskeasy.db");
+             var ps = conn.prepareStatement("SELECT 1 FROM usuarios WHERE " + campo + " = ? LIMIT 1")) {
+
+            ps.setString(1, valor);
+            try (var rs = ps.executeQuery()) {
+                // Si `rs.next()` devuelve true, significa que se encontró al menos una fila (el valor ya existe).
+                return rs.next();
+            }
+
+        } catch (Exception e) {
+            e.printStackTrace();
+            // **Manejo de errores**: En caso de fallo de BD, se asume que existe para prevenir un registro fallido (comportamiento de "falla seguro").
+            return true;
+        }
+    }
+
 }

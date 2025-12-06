@@ -41,20 +41,20 @@ public class Main extends Application {
      - Configurar el escenario (Stage) principal.
      - Mostrar la ventana.
 
-     @param stage Ventana principal que crea automáticamente JavaFX.
+     @param escenario Ventana principal que crea automáticamente JavaFX.
      */
     @Override
-    public void start(Stage stage) throws Exception {
+    public void start(Stage escenario) throws Exception {
 
         /* Cargar el archivo FXML del login */
         FXMLLoader fxmlLoader = new FXMLLoader(getClass().getResource("/view/login.fxml"));
         Parent root = fxmlLoader.load();
 
         /* Configuración básica de la ventana de inicio de sesión, impide modificar tamaño */
-        stage.setTitle("TaskEasy — Inicio de sesión");
-        stage.setScene(new Scene(root, 400, 300));
-        stage.setResizable(false);  // Evitar redimensionar la ventana de login
-        stage.show();               // Mostrarla en pantalla
+        escenario.setTitle("TaskEasy — Inicio de sesión");
+        escenario.setScene(new Scene(root, 400, 300));
+        escenario.setResizable(false);  // Evitar redimensionar la ventana de login
+        escenario.show();               // Mostrarla en pantalla
     }
 
 
@@ -77,13 +77,13 @@ public class Main extends Application {
 
      Al crearse un nuevo Stage, no interfiere con el login que ya se cerró.
      */
-    public static void openMain() {
+    public static void abrirMain() {
         try {
             FXMLLoader fxmlLoader = new FXMLLoader(Main.class.getResource("/view/main.fxml"));
             Parent root = fxmlLoader.load();
 
-            Stage stage = new Stage();
-            Scene scene = new Scene(root, 900, 600);
+            Stage escenario = new Stage();
+            Scene escena = new Scene(root, 900, 600);
 
             /* --------------------------------------
              INYECCIÓN DEL TEMA CLARO POR DEFECTO
@@ -99,14 +99,14 @@ public class Main extends Application {
             ).toExternalForm(); // .toExternalForm() es NECESARIO para que JavaFX lo acepte como String URL.
 
             // Aplica la hoja de estilos inicial (Tema Claro) a la Scene.
-            scene.getStylesheets().add(temaClaroPath);
+            escena.getStylesheets().add(temaClaroPath);
             /*Se añade una propiedad a la Scene que MainController
             usará para saber qué tema está activo y poder alternar entre ellos*/
-            scene.getProperties().put("dark-mode", false);
+            escena.getProperties().put("dark-mode", false);
 
-            stage.setTitle("TaskEasy — Gestor de tareas");
-            stage.setScene(scene);
-            stage.show();
+            escenario.setTitle("TaskEasy — Gestor de tareas");
+            escenario.setScene(escena);
+            escenario.show();
 
         } catch (Exception e) {
             e.printStackTrace();

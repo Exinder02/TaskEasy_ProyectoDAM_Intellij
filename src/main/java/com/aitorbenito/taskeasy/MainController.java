@@ -18,7 +18,6 @@ import javafx.stage.Modality;
 import javafx.stage.Stage;
 
 import java.sql.*;
-import java.time.*;
 import java.time.format.DateTimeFormatter;
 
 /* ----------------------------------
@@ -95,7 +94,7 @@ public class MainController {
         tablaTareas.setPlaceholder(new Label("No hay tareas disponibles. Usa el botón +"));
 
         // Se asegura de que la estructura de la DB exista. (Idempotente, ya se llamó en LoginController, pero no está de más.)
-        Database.ensureInitialized();
+        Database.asegurarInicio();
 
         // ------------------------------------------------------------
         // CARGAR TAREAS EN LA TABLA

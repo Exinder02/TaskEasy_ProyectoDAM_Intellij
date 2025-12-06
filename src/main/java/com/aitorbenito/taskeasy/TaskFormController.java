@@ -1,21 +1,32 @@
+/*Creado por Aitor Benito Heras "ExInDer"*/
 package com.aitorbenito.taskeasy;
 
+/*Imports javafx*/
 import javafx.fxml.FXML;
 import javafx.scene.control.*;
 import javafx.stage.Stage;
+/*Imports java.time*/
 import java.time.LocalDate;
 import java.time.format.DateTimeFormatter;
+/*Imnports SQL*/
 import java.sql.SQLException;
 
 
 public class TaskFormController {
 
-    /* Inyección de elementos del FXML. */
+    /* Declaracion de variasbles*/
+
+    /*Variable Titulo*/
     @FXML private TextField txtTitulo;
+    /*Variable Descripcion*/
     @FXML private TextArea txtDescripcion;
+    /*Variable Fecha*/
     @FXML private DatePicker dpFecha;
+    /*Variable estado*/
     @FXML private ChoiceBox<String> cbEstado;
+    /*Variable titulo de la ventana que nos muestra*/
     @FXML private Label tituloVentana;
+    /*Variable Boton eliminar*/
     @FXML private Button btnEliminar;
 
     private Tarea tareaActual = null; // Almacena la tarea si estamos en modo edición (null en modo creación).
@@ -24,58 +35,56 @@ public class TaskFormController {
     /* ----------------------------------------------------
        Callback para la actualización de la tabla principal
        ----------------------------------------------------
-       Esto es un patrón de diseño: `MainController` inyecta aquí su metodo
-       `cargarTareas()` para que el formulario lo ejecute al finalizar.
-    */
+       MainController inyecta aquí su metodo cargarTareas(); para que el formulario lo ejecute al finalizar*/
     private Runnable onSaveCallback;
 
     /* ----------------------------------------------------
-       Metodo configurar
+                    Metodo configurar
        ----------------------------------------------------
-       Es el metodo de inicialización llamado por el `MainController` (no por JavaFX).
-       Define el modo de trabajo: Crear (tarea == null) o Editar.
-    */
+       Es el metodo de inicialización llamado por el MainController y que define el modo de trabajo: Crear (tarea == null) o Editar*/
     public void configurar(Tarea tarea, Runnable callback) {
         this.tareaActual = tarea;
         this.onSaveCallback = callback;
 
-        // **BUENA PRÁCTICA (UX / Integridad de Datos)**:
         // Evita que el usuario escriba una fecha directamente, forzando el uso del selector.
         dpFecha.setEditable(false);
 
-        // Opciones disponibles para el ChoiceBox.
+        // Opciones disponibles para el estado de la tarea que estamos creando,
         cbEstado.getItems().setAll("Sin estado definido", "Pendiente", "En curso", "Completada");
 
         if (tarea == null) {
-            // **Modo: CREAR NUEVA TAREA**
+            // CREAR NUEVA TAREA
             tituloVentana.setText("Nueva tarea");
-            btnEliminar.setVisible(false); // No se puede eliminar algo que aún no existe.
+            //Ocultamos el boton de eliminar al crear una nueva tarea porque no tiene sentido tenerlo.
+            btnEliminar.setVisible(false);
+            /*El estado por defecto de una tarea es sin estado definido, puesto que puede ser solo una nota...*/
             cbEstado.setValue("Sin estado definido");
 
         } else {
-            // **Modo: EDITAR TAREA**
+            /*EDITAR TAREA*/
             tituloVentana.setText("Editar tarea");
-
+            /*CoGemos los datos introduicdos en el titulo de la tarea y en la descripcion*/
             txtTitulo.setText(tarea.getTitulo());
             txtDescripcion.setText(tarea.getDescripcion());
 
-            // **Manejo y parseo de la fecha (si existe)**
+            /*Manejo y parseo de la fecha (si existe)*/
             if (tarea.getFecha() != null && !tarea.getFecha().equals("Sin fecha establecida")) {
                 try {
                     // Mapeo inverso: String (BD) → LocalDate (UI)
                     dpFecha.setValue(LocalDate.parse(tarea.getFecha(), fmt));
+                    /*Captura de excepcion con la fecha*/
                 } catch (Exception e) {
                     System.err.println("Advertencia: No se pudo parsear la fecha de la tarea ID: " + tarea.getId());
                     // El DatePicker queda vacío.
                 }
             }
 
-            // **Validación y asignación del estado**
+            /*Validación y asignación del estado*/
             String estadoBD = tarea.getEstado();
             if (estadoBD != null && cbEstado.getItems().contains(estadoBD)) {
                 cbEstado.setValue(estadoBD);
             } else {
-                // Protección contra valores nulos o corruptos en la BD.
+                /*Se define como estado por defecto "Sin estado definido" para evitar problemas en la seleccion del estado, y por si el usuario no quiere que tenga estado la tarea.*/
                 cbEstado.setValue("Sin estado definido");
             }
         }
@@ -110,14 +119,14 @@ public class TaskFormController {
 
         try {
             if (tareaActual == null) {
-                // **INSERTAR NUEVA**
+                // Insercion de nueva tarea
                 Database.ejecutar(
                         "INSERT INTO tareas (titulo, descripcion, fecha, estado, usuario_id) VALUES (?, ?, ?, ?, ?)",
                         titulo, descripcion, fechaTexto, estado, Session.getUsuarioActual() // Usa el ID de la sesión
                 );
 
             } else {
-                // **UPDATE EXISTENTE**
+                // UPDATE EXISTENTE
                 // Se utiliza el ID de la tarea para saber qué registro actualizar.
                 Database.ejecutar(
                         "UPDATE tareas SET titulo=?, descripcion=?, fecha=?, estado=? WHERE id=?",
@@ -136,7 +145,7 @@ public class TaskFormController {
     }
 
     /* ----------------------------------------------------
-       Metodo eliminarTarea
+                    Metodo eliminarTarea
        ----------------------------------------------------
        Maneja la acción de eliminar, solo disponible en modo edición.
     */
@@ -144,7 +153,7 @@ public class TaskFormController {
     private void eliminarTarea() {
         if (tareaActual == null) return;
 
-        // **BUENA PRÁCTICA**: Confirma la acción destructiva con el usuario.
+        // Confirma la acción destructiva con el usuario.
         Alert confirmar = new Alert(Alert.AlertType.CONFIRMATION);
         confirmar.setTitle("Confirmar eliminación");
         confirmar.setHeaderText("Eliminar tarea: " + tareaActual.getTitulo());
@@ -153,15 +162,14 @@ public class TaskFormController {
         // Si el usuario no pulsa OK, aborta la eliminación.
         if (confirmar.showAndWait().orElse(ButtonType.CANCEL) != ButtonType.OK) {
             return;
-        }
-
-        try {
+        } try {
             // **DELETE**
             Database.ejecutar("DELETE FROM tareas WHERE id=?", tareaActual.getId());
 
             // Ejecuta el callback y cierra.
             if (onSaveCallback != null) onSaveCallback.run();
             cerrar();
+
         } catch (SQLException e) {
             alert("Error", "No se pudo eliminar la tarea.");
             e.printStackTrace();

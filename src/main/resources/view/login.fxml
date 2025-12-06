@@ -10,12 +10,12 @@
 
     <Label text="Iniciar sesión en TaskEasy" style="-fx-font-size: 16px; -fx-font-weight: bold;"/>
 
-    <TextField fx:id="txtUser" promptText="Correo electrónico / Usuario"/>
-    <PasswordField fx:id="txtPassword" promptText="Contraseña"/>
+    <TextField fx:id="txtUsuario" promptText="Correo electrónico / Usuario"/>
+    <PasswordField fx:id="txtContraseña" promptText="Contraseña"/>
 
     <HBox spacing="10" alignment="CENTER">
-        <Button fx:id="btnLogin" text="Iniciar sesión" onAction="#login"/>
-        <Button fx:id="btnRegister" text="Registrarse" onAction="#register"/>
+        <Button fx:id="btnLogeo" text="Iniciar sesión" onAction="#logueo"/>
+        <Button fx:id="btnRegister" text="Registrarse" onAction="#registro"/>
     </HBox>
 
 </VBox>
