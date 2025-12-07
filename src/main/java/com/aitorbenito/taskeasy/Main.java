@@ -1,3 +1,4 @@
+/*Creado por Aitor Benito Heras "ExInDer"*/
 package com.aitorbenito.taskeasy;
 
 import javafx.application.Application;
@@ -5,28 +6,30 @@ import javafx.fxml.FXMLLoader;
 import javafx.scene.Parent;
 import javafx.scene.Scene;
 import javafx.stage.Stage;
+import javafx.scene.image.Image;
 
 import java.util.Objects;
 
 /*
- Clase principal (Main) de mi aplicación TaskEasy.
+     Clase principal (Main) de mi aplicación TaskEasy.
 
- Esta clase se extiende de `javafx.application.Application`,
- lo que la hace el punto de entrada de cualquier proyecto JavaFX.
+     Esta clase se extiende de "javafx.application.Application",
+     lo que la hace el punto de entrada del proyecto por ser en JavaFX.
 
- Desde esta clase Main:
+     Desde esta clase Main:
+         - Se inicia JavaFX.
+         - Se carga la primera ventana (el login).
+         - Se gestiona la transición desde la ventana de login hacia la ventana principal
 
- - Se inicia JavaFX.
- - Se carga la primera ventana (el login).
- - Se gestiona la transición desde la ventana de login hacia la ventana principal.
-
- IMPORTANTE:
- El metodo `main()` NO abre ventanas. Solo lanza el sistema JavaFX,
- que a su vez llama automáticamente al metodo `start()`.
- */
+     El metodo "main()" lanza el sistema JavaFX, que a su vez llama automáticamente al metodo "start()"
+*/
 public class Main extends Application {
 
-
+    /*
+        Ruta del icono de la aplicación, la creamos aqui para que sea reutilizable
+        en los dos metodos que tenemos a continuacion.
+    */
+    private static final String ICONO_PATH = "/images/TaskEasyGT_Icono.png";
 
     /*-----------------------
           Metodo Start:
@@ -41,14 +44,16 @@ public class Main extends Application {
      - Configurar el escenario (Stage) principal.
      - Mostrar la ventana.
 
-     @param escenario Ventana principal que crea automáticamente JavaFX.
+     Stage o escenario, Ventana principal que crea automáticamente JavaFX.
      */
     @Override
     public void start(Stage escenario) throws Exception {
 
         /* Cargar el archivo FXML del login */
-        FXMLLoader fxmlLoader = new FXMLLoader(getClass().getResource("/view/login.fxml"));
+        FXMLLoader fxmlLoader = new FXMLLoader(getClass().getResource("/view/logueo.fxml"));
         Parent root = fxmlLoader.load();
+
+        aplicarIcono(escenario);
 
         /* Configuración básica de la ventana de inicio de sesión, impide modificar tamaño */
         escenario.setTitle("TaskEasy — Inicio de sesión");
@@ -60,14 +65,14 @@ public class Main extends Application {
 
 
     /* ----------------------------
-            Metodo openMain
+            Metodo abrirMain
        ----------------------------
 
-     Metodo estático utilizado por el LoginController para abrir la ventana principal.
+     Metodo estático utilizado por el ControladorLogueo para abrir la ventana principal.
 
      Este metodo se ejecuta únicamente después de que:
      - El usuario haya introducido credenciales correctas,
-     - LoginController haya validado esos datos,
+     - ControladorLogueo haya validado esos datos,
      - Se haya cerrado la ventana de login.
 
      ¿Qué hace este metodo?
@@ -84,6 +89,8 @@ public class Main extends Application {
 
             Stage escenario = new Stage();
             Scene escena = new Scene(root, 900, 600);
+
+            aplicarIcono(escenario);
 
             /* --------------------------------------
              INYECCIÓN DEL TEMA CLARO POR DEFECTO
@@ -113,7 +120,23 @@ public class Main extends Application {
         }
     }
 
+    private static void aplicarIcono(Stage stage) {
+        try {
+            // Se carga la imagen desde los recursos del paquete.
+            Image icono = new Image(
+                    Objects.requireNonNull(
+                            Main.class.getResourceAsStream(ICONO_PATH),
+                            "ERROR: No se encontró el archivo de icono en la ruta: " + ICONO_PATH
+                    )
+            );
+            // Se añade el icono al objeto Stage.
+            stage.getIcons().add(icono);
 
+        } catch (NullPointerException e) {
+            // Si el icono no se encuentra, imprime el error pero permite que la aplicación continúe sin icono.
+            System.err.println("ADVERTENCIA: No se pudo cargar el icono de la aplicación. " + e.getMessage());
+        }
+    }
 
     /*----------------------------------
        Metodo main tradicional en Java.

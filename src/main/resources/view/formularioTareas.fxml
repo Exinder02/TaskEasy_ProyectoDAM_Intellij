@@ -1,0 +1,109 @@
+<?xml version="1.0" encoding="UTF-8"?>
+
+<!-- Creado por Aitor Benito Heras "ExInDer" -->
+
+<?import javafx.scene.control.*?>
+<?import javafx.scene.layout.*?>
+
+<!--
+    Ventana de creación/modificación de tareas.
+
+    El controlador asociado que tiene es el ControladorFormularioTareas.
+
+    La estructura principal está basada en BorderPane.
+
+    Zonas diferenciadas:
+    - Arriba: título de la ventana
+    - Centro: formulario con los campos de la tarea
+    - Abajo: botones (guardar, eliminar, cancelar).
+-->
+<BorderPane xmlns="http://javafx.com/javafx/21"
+            xmlns:fx="http://javafx.com/fxml"
+            fx:controller="com.aitorbenito.taskeasy.ControladorFormularioTareas"
+            prefWidth="420" prefHeight="380"
+            style="-fx-background-color: white; -fx-padding: 20;">
+
+    <!--
+        Cabecera de la ventana: título dinámico (Nuevo / Editar Tarea)
+        -->
+    <top>
+        <Label fx:id="tituloVentana"
+               style="-fx-font-size: 20px; -fx-font-weight: bold;" />
+    </top>
+
+    <!--
+        Contenido central: formulario para editar/crear tarea
+     -->
+    <center>
+        <VBox spacing="12" style="-fx-padding: 10;">
+
+            <!--
+                Campo para el título de la tarea
+             -->
+            <Label text="Título:"/>
+            <TextField fx:id="txtTitulo" promptText="Escribe un título"/>
+
+            <!--
+                Campo para la descripción de la tarea
+             -->
+            <Label text="Descripción:"/>
+            <TextArea fx:id="txtDescripcion"
+                      prefRowCount="4"
+                      wrapText="true"
+                      promptText="Describe la tarea (opcional)"/>
+
+            <!--
+                Campo para asignar una fecha límite de la tarea
+                            (Puede quedar vacio)
+             -->
+            <Label text="Fecha:"/>
+            <DatePicker fx:id="dpFecha"/>
+
+            <!--
+                Campo del estado de la tarea
+                Se tiene que escoger en el choiceBox entre pendiente, en proceso, completada o sin estado
+             -->
+            <Label text="Estado:"/>
+            <ChoiceBox fx:id="cbEstado"/>
+
+        </VBox>
+
+    </center>
+
+    <!--
+        Zona inferior: botones de acciones principales
+     -->
+    <bottom>
+        <HBox spacing="10" alignment="CENTER_RIGHT" style="-fx-padding: 10 0 0 0;">
+
+            <!--
+                Botón para eliminar la tarea (solo visible en modo edición)
+            -->
+            <Button text="Eliminar" fx:id="btnEliminar"
+                    style="-fx-background-color: #ff6b6b; -fx-text-fill: white;"
+                    onAction="#eliminarTarea"/>
+
+            <!--
+                Espaciador flexible para alinear botones
+             -->
+            <Region HBox.hgrow="ALWAYS"/>
+
+            <!--
+                Botón cancelar (cierra el formulario)
+             -->
+            <Button text="Cancelar" onAction="#cerrar"/>
+
+
+            <!--
+                Botón para guardar la tarea
+                 -->
+            <Button text="Guardar" fx:id="btnGuardar"
+                    style="-fx-background-color: #4caf50; -fx-text-fill: white;"
+                    onAction="#guardar"/>
+
+        </HBox>
+
+    </bottom>
+
+
+</BorderPane>

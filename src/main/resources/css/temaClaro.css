@@ -1,11 +1,17 @@
-/* --- FONDO GLOBAL --- */
+/*Creado por Aitor Benito Heras "ExInDer"*/
+
+/*
+Fondo Global de la app
+*/
 .root {
     -fx-base: white;
     -fx-background-color: white;
     -fx-text-fill: black;
 }
 
-/* --- BARRA DE MENÚ y MENÚS --- */
+/*
+Barra de menú y los diferentes menús
+*/
 .menu-bar {
     -fx-background-color: #ececec;
 }
@@ -22,7 +28,11 @@
     -fx-background-color: #dcdcdc;
 }
 
-/* --- TABLA --- */
+/*
+
+            Tabla de tareas
+
+*/
 .table-view {
     -fx-background-color: white;
     -fx-control-inner-background: white;
@@ -36,32 +46,44 @@
     -fx-text-fill: black;
 }
 
-/* Texto por defecto de las celdas (Normalmente se hereda, pero lo definimos para seguridad) */
+/*
+    Color del texto por defecto de las celdas
+*/
 .table-view .table-cell {
     -fx-text-fill: black;
 }
 
-/* ---------------------------------------------------- */
-/* ESTILO PARA FILAS SELECCIONADAS (CLARO)              */
-/* ---------------------------------------------------- */
+/*
+Estilo de color CLARO para las celdas seleccionadas
 
-/* 1. Definimos el estilo de la fila seleccionada (Fondo Azul) */
+Definimos el estilo de la fila seleccionada (Fondo Azul)
+*/
 .table-view .table-row-cell:selected {
     -fx-background-color: #2196F3;
 }
 
-/* 2. AUMENTAMOS LA ESPECIFICIDAD para forzar texto NEGRO y NEGRIYTA */
+/*
+Forzamos el texto de la fila seleccionada en color negro y resaltado en negrita
+*/
 .table-view .table-row-cell:selected .table-cell {
-    /* Forzamos el texto a negro para alto contraste sobre el azul */
+    /*
+    Forzamos el texto a negro para alto contraste sobre el azul
+    */
     -fx-text-fill: black !important;
-    /* Lo ponemos en negrita para resaltarlo */
+    /*
+     Lo ponemos en negrita para resaltarlo
+     */
     -fx-font-weight: bold;
-    /* Aseguramos que el fondo de la celda es transparente */
+    /*
+    Aseguramos que el fondo de la celda es transparente
+    */
     -fx-background-color: transparent;
 }
 
 
-/* --- CAMPOS DE TEXTO y BOTONES --- */
+/*
+Colores de los campos de texto y botones de la app
+*/
 .text-field,
 .text-area {
     -fx-background-color: white;

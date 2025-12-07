@@ -1,14 +1,24 @@
-/* --- FONDO GLOBAL --- */
+/*Creado por Aitor Benito Heras "ExInDer"*/
+
+/*
+
+ Fondo global del programa
+
+ */
 .root {
     -fx-base: #2b2b2b;
     -fx-background-color: #2b2b2b;
 }
 
-/* --- BARRA DE MENÚ y MENÚS DESPLEGABLES --- (Sin cambios) */
+/*
+Barra de menu y los menús desplegables de esta
+
+No aplicamos cambios respecto a la vista del temaClaro
+*/
 .menu-bar {
     -fx-background-color: #1e1e1e;}
 .menu-bar .label {
-    -fx-text-fill: #e5d6c1; /* gris cálido */}
+    -fx-text-fill: #e5d6c1;}
 .menu:hover, .menu:focused {
     -fx-background-color: #3a3a3a;}
 .context-menu {
@@ -18,7 +28,11 @@
 .menu-item:focused {
     -fx-background-color: #3a3a3a;}
 
-/* --- TABLA --- */
+/*
+
+            Tabla de tareas
+
+*/
 .table-view {
     -fx-background-color: #2b2b2b;
     -fx-control-inner-background: #2b2b2b;
@@ -29,29 +43,41 @@
 .table-view .column-header .label {
     -fx-text-fill: #e5d6c1; /* gris cálido */}
 
-/* TEXTO DE CELDAS (por defecto en gris cálido) */
+/*
+ Color del texto por defecto de las celdas
+*/
 .table-cell {
     -fx-text-fill: black;
     -fx-background-color: transparent;
 }
 
-/* ---------------------------------------------------- */
-/* ESTILO PARA FILAS SELECCIONADAS (OSCURO)             */
-/* ---------------------------------------------------- */
+/*
+Estilo de color OSCURO para las celdas seleccionadas
+
+Definimos el estilo de la fila seleccionada
+*/
 .table-row-cell:selected {
-    /* Fondo de selección */
+    /*
+    Estilo del fondo de la selección
+    */
     -fx-background-color: #1A73E8;
 }
 
-/* Celdas dentro de una fila seleccionada: Texto negro y negrita */
+/*
+Celdas dentro de una fila seleccionada: Texto negro y negrita
+*/
 .table-row-cell:selected .table-cell {
-    /* Forzamos el texto a negro. El fondo oscuro lo hará resaltar. */
+    /*
+    Forzamos el texto en color negro y negrita para que quede resaltado
+    */
     -fx-text-fill: black !important;
     -fx-font-weight: bold;
     -fx-background-color: transparent;
 }
 
-/* --- CAMPOS DE TEXTO y BOTONES --- (Sin cambios) */
+/*
+Colores de los campos de texto y botones de la app
+*/
 .text-field,
 .text-area {
     -fx-background-color: #3a3a3a;
