@@ -48,6 +48,14 @@ public class Main extends Application {
      */
     @Override
     public void start(Stage escenario) throws Exception {
+        /*
+            Al iniciar la aplicación se llama a asegurarInicio() para asegurarnos de:
+                - Que la base de datos existe
+                - Que sus tablas están creadas
+                - Que la estructura de la base de datos es válida.
+            Esto evita errores si la base de datos local no está presente o necesita inicializarse (porque ya nos ha pasado)
+        */
+        BaseDeDatos.asegurarInicio();
 
         /* Cargar el archivo FXML del login */
         FXMLLoader fxmlLoader = new FXMLLoader(getClass().getResource("/view/logueo.fxml"));
