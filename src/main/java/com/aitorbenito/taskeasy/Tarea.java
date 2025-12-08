@@ -28,7 +28,7 @@ public class Tarea {
     private final SimpleStringProperty descripcion;
     private final SimpleStringProperty fecha;
     private final SimpleStringProperty estado;
-
+    private final SimpleIntegerProperty idCategoria;
 
     /* -------------------------------------------------
 
@@ -37,12 +37,13 @@ public class Tarea {
        -------------------------------------------------
         Usado para poder mapear datos de la BaseDeDatos.
      */
-    public Tarea(int id, String titulo, String descripcion, String fecha, String estado) {
+    public Tarea(int id, String titulo, String descripcion, String fecha, String estado, Integer idCategoria) {
         this.id = new SimpleIntegerProperty(id);
         this.titulo = new SimpleStringProperty(titulo);
         this.descripcion = new SimpleStringProperty(descripcion);
         this.fecha = new SimpleStringProperty(fecha);
         this.estado = new SimpleStringProperty(estado);
+        this.idCategoria = new SimpleIntegerProperty(idCategoria != null ? idCategoria : 0);
     }
 
     /* ----------------------------------
@@ -57,6 +58,8 @@ public class Tarea {
     public String getDescripcion() { return descripcion.get(); }
     public String getFecha() { return fecha.get(); }
     public String getEstado() { return estado.get(); }
+    public int getIdCategoria() { return idCategoria.get(); }
+
 
     /* ------------------------------------
 
@@ -70,4 +73,6 @@ public class Tarea {
     public SimpleStringProperty descripcionProperty() { return descripcion; }
     public SimpleStringProperty fechaProperty() { return fecha; }
     public SimpleStringProperty estadoProperty() { return estado; }
+    public SimpleIntegerProperty idCategoriaProperty() { return idCategoria; }
+
 }

@@ -2,6 +2,7 @@
 package com.aitorbenito.taskeasy;
 
 import javafx.application.Platform;
+import javafx.beans.property.SimpleStringProperty;
 import javafx.collections.FXCollections;
 import javafx.collections.ObservableList;
 import javafx.fxml.FXML;
@@ -34,6 +35,8 @@ public class ControladorPrincipal {
     @FXML private TableColumn<Tarea, String> colDescripcion;
     @FXML private TableColumn<Tarea, String> colFecha;
     @FXML private TableColumn<Tarea, String> colEstado;
+    @FXML private TableColumn<Tarea, String> colCategoria;
+
 
     /* Contenedores para elementos de interfaz (Ej. para la leyenda de colores). */
 
@@ -68,6 +71,23 @@ public class ControladorPrincipal {
         colDescripcion.setCellValueFactory(data -> data.getValue().descripcionProperty());
         colFecha.setCellValueFactory(data -> data.getValue().fechaProperty());
         colEstado.setCellValueFactory(data -> data.getValue().estadoProperty());
+
+        // ----------------------------------------------------------
+        // NUEVO: Configuración de la columna Categoría
+        // ----------------------------------------------------------
+        colCategoria.setCellValueFactory(cellData -> {
+            int idCat = cellData.getValue().getIdCategoria();
+
+            Categoria categoria = BaseDeDatos.obtenerCategorias()
+                    .stream()
+                    .filter(c -> c.getId() == idCat)
+                    .findFirst()
+                    .orElse(null);
+
+            return new SimpleStringProperty(
+                    categoria != null ? categoria.getNombre() : "Sin categoría"
+            );
+        });
 
         /*
         Configuración de la columna de la fecha
@@ -352,7 +372,8 @@ public class ControladorPrincipal {
                         resultSet.getString("titulo"),
                         resultSet.getString("descripcion"),
                         resultSet.getString("fecha"),
-                        resultSet.getString("estado")
+                        resultSet.getString("estado"),
+                        resultSet.getObject("id_categoria") != null ? resultSet.getInt("id_categoria") : null
                 ));
             }
             /*

@@ -130,6 +130,36 @@ public class BaseDeDatos {
                         );
                     """);
 
+            /*  -------------------------------------------
+
+                     CREACIÓN DE LA TABLA 'categorias'
+
+                -------------------------------------------
+                Esta tabla permite asignar etiquetas a las tareas.
+            */
+            stat.execute("""
+            CREATE TABLE IF NOT EXISTS categorias (
+                id INTEGER PRIMARY KEY AUTOINCREMENT,
+                nombre TEXT NOT NULL UNIQUE,
+                color TEXT
+            );
+        """);
+
+            /*
+                    INSERTAR CATEGORÍAS POR DEFECTO
+                     (solo si la tabla está vacía)
+            */
+            try (ResultSet rs = stat.executeQuery("SELECT COUNT(*) AS total FROM categorias")) {
+                if (rs.next() && rs.getInt("total") == 0) {
+                    stat.execute("INSERT INTO categorias (nombre) VALUES ('Sin categoría');");
+                    stat.execute("INSERT INTO categorias (nombre) VALUES ('Trabajo');");
+                    stat.execute("INSERT INTO categorias (nombre) VALUES ('Personal');");
+                    stat.execute("INSERT INTO categorias (nombre) VALUES ('Urgente');");
+                    System.out.println("Categorías iniciales insertadas.");
+                }
+            }
+
+
             /* -------------------------------------------
 
                      CREACIÓN DE LA TABLA 'usuarios'
@@ -146,6 +176,29 @@ public class BaseDeDatos {
                         );
                     """);
 
+            /* ---------------------------------------------------------------------------------
+
+                         AÑADIR COLUMNA id_categoria A 'tareas' SI NO EXISTE
+
+              ---------------------------------------------------------------------------------
+            */
+            try (ResultSet resultSet = stat.executeQuery("PRAGMA table_info(tareas);")) {
+
+                boolean existeIdCategoria = false;
+
+                while (resultSet.next()) {
+                    if ("id_categoria".equalsIgnoreCase(resultSet.getString("name"))) {
+                        existeIdCategoria = true;
+                        break;
+                    }
+                }
+
+                if (!existeIdCategoria) {
+                    stat.execute("ALTER TABLE tareas ADD COLUMN id_categoria INTEGER DEFAULT NULL;");
+                    System.out.println("Columna 'id_categoria' añadida correctamente a la tabla tareas.");
+                }
+
+            }
 
             /* -------------------------------------------------------
 
@@ -264,6 +317,27 @@ public class BaseDeDatos {
             return true;
         }
 
+    }
+
+    /* -------------------------------------------------------
+                Obtener todas las categorías
+   ------------------------------------------------------- */
+    public static java.util.List<Categoria> obtenerCategorias() {
+        java.util.List<Categoria> lista = new java.util.ArrayList<>();
+
+        try (ResultSet rs = consultar("SELECT id, nombre, color FROM categorias ORDER BY id")) {
+            while (rs.next()) {
+                lista.add(new Categoria(
+                        rs.getInt("id"),
+                        rs.getString("nombre"),
+                        rs.getString("color")
+                ));
+            }
+        } catch (Exception e) {
+            e.printStackTrace();
+        }
+
+        return lista;
     }
 
 }

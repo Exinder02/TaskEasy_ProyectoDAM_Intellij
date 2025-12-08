@@ -22,27 +22,29 @@ import java.time.format.DateTimeFormatter;
 Imports SQL
 */
 import java.sql.SQLException;
+import com.aitorbenito.taskeasy.Categoria;
 
 
 public class ControladorFormularioTareas {
 
-    /*Declaramos el boton guardar del formulario de las tareas*/
+    /* Boton guardar del formulario de las tareas*/
     @FXML Button btnGuardar;
-
-    /* Declaración de variables*/
-
-    /*Variable Titulo*/
+    /* Area introduccion Titulo*/
     @FXML private TextField txtTitulo;
-    /*Variable Descripcion*/
+    /* Area introduccion Descripcion*/
     @FXML private TextArea txtDescripcion;
-    /*Variable Fecha*/
+    /* Selector Fecha*/
     @FXML private DatePicker dpFecha;
-    /*Variable estado*/
+    /* Selector del Estado de la tarea*/
     @FXML private ChoiceBox<String> cbEstado;
-    /*Variable titulo de la ventana que nos muestra*/
+    /* Título de la ventana que nos muestra*/
     @FXML private Label tituloVentana;
-    /*Variable Botón eliminar*/
+    /* Botón eliminar*/
     @FXML private Button btnEliminar;
+    /* Selector de categorías*/
+    @FXML
+    private ComboBox<Categoria> comboCategoria;
+
 
 
     private Tarea tareaActual = null; // Almacena la tarea si estamos en modo edición (null en modo creación).
@@ -70,6 +72,11 @@ public class ControladorFormularioTareas {
         this.tareaActual = tarea;
         this.onSaveCallback = callback;
 
+        // ---------------------------------------------
+        // Cargar categorías desde la base de datos
+        // ---------------------------------------------
+        comboCategoria.getItems().setAll(BaseDeDatos.obtenerCategorias());
+        comboCategoria.getSelectionModel().selectFirst();
         // Evita que se pueda escribir una fecha directamente, asi forzamos el uso del selector
         dpFecha.setEditable(false);
 
@@ -115,6 +122,17 @@ public class ControladorFormularioTareas {
                 en la selección del estado y por si el usuario no quiere que tenga estado la tarea.*/
                 cbEstado.setValue("Sin estado definido");
             }
+
+            /*
+                  Seleccionar categoría correcta
+            */
+            for (Categoria c : comboCategoria.getItems()) {
+                if (c.getId() == tarea.getIdCategoria()) {
+                    comboCategoria.getSelectionModel().select(c);
+                    break;
+                }
+            }
+
         }
     }
 
@@ -134,14 +152,17 @@ public class ControladorFormularioTareas {
         String descripcion = txtDescripcion.getText().trim();
         LocalDate fecha = dpFecha.getValue();
         String estado = cbEstado.getValue();
+        // Obtener la categoría seleccionada
+        Categoria categoria = comboCategoria.getValue();
+        Integer idCategoria = (categoria != null) ? categoria.getId() : null;
 
-        // **Validación 1**: Título obligatorio.
+        // **Validación 1: Título obligatorio.
         if (titulo.isEmpty()) {
             alert("Error", "El título es obligatorio.");
             return;
         }
 
-        // **Validación 2**: Estado obligatorio (aunque el choicebox por defecto ya ayuda).
+        // **Validación 2: Estado obligatorio (aunque el choicebox por defecto ya ayuda).
         if (estado == null || estado.isEmpty()) {
             alert("Error", "Debes seleccionar un estado para la tarea.");
             return;
@@ -155,15 +176,15 @@ public class ControladorFormularioTareas {
                 // Insercion de nueva tarea
                 BaseDeDatos.ejecutar(
                         "INSERT INTO tareas (titulo, descripcion, fecha, estado, usuario_id) VALUES (?, ?, ?, ?, ?)",
-                        titulo, descripcion, fechaTexto, estado, SesionUsuario.getUsuarioActual() // Usa el ID de la sesión
+                        titulo, descripcion, fechaTexto, estado, SesionUsuario.getUsuarioActual()
                 );
 
             } else {
                 // UPDATE EXISTENTE
                 // Se utiliza el ID de la tarea para saber qué registro actualizar.
                 BaseDeDatos.ejecutar(
-                        "UPDATE tareas SET titulo=?, descripcion=?, fecha=?, estado=? WHERE id=?",
-                        titulo, descripcion, fechaTexto, estado, tareaActual.getId()
+                        "UPDATE tareas SET titulo=?, descripcion=?, fecha=?, estado=?, id_categoria=? WHERE id=?",
+                        titulo, descripcion, fechaTexto, estado, idCategoria, tareaActual.getId()
                 );
             }
 

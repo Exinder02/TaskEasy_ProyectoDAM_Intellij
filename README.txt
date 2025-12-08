@@ -1,49 +1,160 @@
-Proyecto CFGS DAM Aitor Benito Heras
+TaskEasy Gestor de tareas. (Proyecto Final CFGS DAM)
 
-El proyecto TaskEasy corresponde a una aplicación de escritorio para gestionar tareas. 
+Autor: Aitor Benito Heras (ExInDer)
+Versión: 1.0
+Año: 2025
+
+Descripción del proyecto:
+TaskEasy es una aplicación de escritorio multiplataforma diseñada para gestionar tareas de forma sencilla e intuitiva con persistencia local.
+
+Esta Aplicación ha sido desarrollada como Proyecto Final del CFGS DAM en Ilerna.
+
+Incluye:
+
+- Sistema de usuarios (login y registro).
+- Tareas persistentes por usuario.
+- Base de datos SQLite integrada.
+- Interfaz en JavaFX moderna.
+- Modo claro / modo oscuro.
+- Colores según estado de tarea.
+- CRUD completo: Crear, Editar, Eliminar.
+- Paquete instalable para Windows (.exe) y Linux (.deb).
 
 
-* Requisitos del sistema:
-	- Java JDK 17 instalado en el sistema operativo.
-	- Intellij IDEA (Recomendado por ser el IDE usado para la creación de TaskEasy) o cualquier IDe compatible con Maven. 
-	- Conexión a internet la primera vez que se usa el programa, para que maven descargue las dependencias necesarias. 
+Requisitos del sistema:
+Para usuarios finales (instaladores .exe y .deb)
 
-* ¿Como abro el proyecto en IntelliJ IDEA?:
-	- Descomprime el archivo TaskEasy_ProyectoDAM_Intellij.zip en la carpeta que desees, recomiendo hacerlo en la carpeta donde tengas otros proyectos de IntelliJ
-	- En IntelliJ IDEA abre File + Open + Selecciona el archivo pom.xml de la carpeta donde has descomprimido el proyecto
-	- Una vez cargado el archivo, tendrás que esperar a que se descarguen todas las dependencias necesarias, habrá un mensaje que dice "Indexing...", espera a que termine.
-	- Abre ** src/main/java/com/aitorbenito/TaskEasy/Main.java **
-	- Ejecuta con CLICK DERECHO: ** Run 'Main.main()' **
+No requiere JDK ni Maven ni dependencias externas.
 
-* ¿Qué hace la aplicación?
-	- Crear automáticamente la base de datos de SQLite (TaskEasy.db) en la carpeta raíz del proyecto. 
-	- Muestra una tabla de tareas y un formulario para crear y editarlas. 
-	- Tiene botones para Crear, Actualizar y Eliminar las tareas. 
-	- Tiene un filtro por estado de las tareas, donde se encuentran: Todas las tareas, Tareas pendientes, Tareas completadas.
+Los instaladores incluyen:
 
-* Estructura del proyecto creado en Maven:
-	- En el archivo ** pom.xml ** se encuentra la configuración de dependencias de JavaFX y SQLite
-	- En la ruta ** src/main/java/com/aitorbenito/taskeasy ** se encuentra el código Java. (Main, Database, Tarea, TareaDAO, MainController)
-	- En la ruta ** src/main/resources/view ** se encuentra la interfaz de JavaFX (main.fxml)
+Java Runtime personalizado (JDK 21 recortado con jlink)
 
-* Posibles errores que puede dar el programa: 
+Todas las dependencias JavaFX
 
-	- No se abre la ventana / error de JavaFX
+SQLite JDBC integrado
 
-		- Asegúrate que estás usando Java JDK 17 y que el proyecto está importado con MAVEN.
-		- Vuelve a ejecutar ** Run 'Main.main()' ** tras finalizar la descarga de dependencias, si lo ejecutas antes de que termine dará error. 
+Sistema operativo compatible:
 
-	- Error con SQLite JDBC:
+- Windows 10 / 11 (64 bits)
 
-		- Deja que MAVEN termine de descargarlo por completo. 
-		- Si no has dejado descargar por completo y lo has intentado ejecutar, fallará aunque hayas esperado que se descargue del todo y lo ejecutes de nuevo. 
-		- En caso de que no funcione después de descárgalo todo, deberías eliminarlo y hacer un "Rebuild Project" y esperar para que se cargue correctamente. 
+- Ubuntu / Debian y derivados (64 bits)
 
-	- FXML NO encontrado:
 
-		- Verifica que el archivo existe en ** src/main/resources/view/main.fxml **
-		- Comprueba que el recurso se carga con la ruta ** view/main.fmxl **
+Para desarrolladores / profesores que quieran abrir el código en IntelliJ
+- Java JDK 21
+- IntelliJ IDEA (recomendado)
+- Conexión a internet la primera vez para que Maven descargue dependencias
 
-	- No aparece la base de datos:
 
-		- Se crea en el primer arranque del programa. Revise que existe ** taskeasy.db ** en la raíz del proyecto. 
+
+Cómo abrir el proyecto en IntelliJ IDEA
+
+- Descomprimir TaskEasy_ProyectoDAM_Intellij.zip
+- Abrir IntelliJ → File → Open
+- Seleccionar el archivo pom.xml
+- Esperar a que Maven descargue todas las dependencias (mensaje "Indexing...")
+- Abrir:src/main/java/com/aitorbenito/taskeasy/Main.java
+- Ejecutar: Run 'Main.main()'
+
+
+Instalación para usuarios finales
+Windows (.exe)
+
+- Ejecutar el archivo TaskEasy-1.0.exe
+- El instalador añadirá acceso directo al menú Inicio
+- Abrir "TaskEasy" desde el acceso directo
+
+
+Linux 
+- (.deb) Doble clic → “Instalar con Software” 
+- O bien, vía terminal: sudo dpkg -i TaskEasy_1.0_amd64.deb
+- La app aparecerá en el menú de aplicaciones.
+
+
+Funcionamiento interno de la base de datos
+
+Al iniciar TaskEasy:
+
+Si no existe la base de datos local → se copia automáticamente desde los recursos del programa.
+
+
+Ubicación según sistema operativo:
+
+- Windows %LOCALAPPDATA%\TaskEasy\taskeasy.db
+- Linux / macOS ~/.local/share/TaskEasy/taskeasy.db
+
+
+La base de datos incluida contiene:
+
+Usuario 1 (para docentes)
+Email: ilerna@ilerna.com
+Usuario: ilerna
+Contraseña: 12345
+
+Usuario 2 (para alumnos)
+Email: alumno@ilerna.com
+Usuario: alumno
+Contraseña: 54321
+
+
+Ambos perfiles contienen tareas preconfiguradas para que se puedan probar todas las funcionalidades.
+
+Estructura del proyecto (código fuente)
+
+src/main/java/com/aitorbenito/taskeasy/
+ ├─ Main.java                     (Punto de entrada de la app)
+ ├─ BaseDeDatos.java              (Gestión de SQLite)
+ ├─ ControladorLogueo.java        (Login)
+ ├─ ControladorRegistro.java      (Registro de usuarios)
+ ├─ ControladorPrincipal.java     (Ventana principal y CRUD)
+ ├─ ControladorFormularioTareas.java (Formulario Crear/Editar)
+ ├─ SesionUsuario.java            (Gestión de sesión)
+ └─ Tarea.java                    (Modelo de datos)
+
+
+
+Interfaces JavaFX:
+
+src/main/resources/view/
+ ├─ logueo.fxml
+ ├─ registro.fxml
+ ├─ main.fxml
+ └─ formularioTareas.fxml
+
+
+
+Temas visuales:
+
+src/main/resources/css/
+ ├─ temaClaro.css
+ └─ temaOscuro.css
+
+
+
+Base de datos incluida:
+
+src/main/resources/taskeasy.db
+
+Posibles errores y soluciones:
+
+1. FXML no encontrado
+Verificar rutas en: src/main/resources/view/
+
+
+2. Error de dependencias en IntelliJ
+Ejecutar: Maven → Reload Project
+
+3. Error con SQLite en ejecución dentro del IDE
+Borrar la base local: %LOCALAPPDATA%\TaskEasy\
+
+TaskEasy la regenerará automáticamente.
+
+
+Estado final del proyecto
+
+- Código completo
+- Base de datos incluida y funcional
+- Usuarios y tareas precargadas
+- Instaladores Windows y Linux creados con éxito
+- App totalmente operativa en ambos SO. 

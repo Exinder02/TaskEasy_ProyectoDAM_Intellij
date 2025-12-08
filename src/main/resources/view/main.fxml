@@ -93,6 +93,8 @@
                     <TableColumn fx:id="colDescripcion" text="Descripción" prefWidth="300"/>
                     <TableColumn fx:id="colFecha" text="Fecha limite" prefWidth="120"/>
                     <TableColumn fx:id="colEstado" text="Estado" prefWidth="120"/>
+                    <TableColumn fx:id="colCategoria" text="Categoría" prefWidth="120"/>
+
 
                 </columns>
 
