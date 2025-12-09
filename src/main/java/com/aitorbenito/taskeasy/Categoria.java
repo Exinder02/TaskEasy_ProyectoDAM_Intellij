@@ -3,7 +3,7 @@ package com.aitorbenito.taskeasy;
 public class Categoria {
     private int id;
     private String nombre;
-    private String color; // de momento no lo usaremos, pero ya queda preparado
+    private String color;
 
     public Categoria(int id, String nombre, String color) {
         this.id = id;

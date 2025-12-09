@@ -72,9 +72,9 @@ public class ControladorPrincipal {
         colFecha.setCellValueFactory(data -> data.getValue().fechaProperty());
         colEstado.setCellValueFactory(data -> data.getValue().estadoProperty());
 
-        // ----------------------------------------------------------
-        // NUEVO: Configuración de la columna Categoría
-        // ----------------------------------------------------------
+        /*
+                 Configuración de la columna Categoría
+        */
         colCategoria.setCellValueFactory(cellData -> {
             int idCat = cellData.getValue().getIdCategoria();
 

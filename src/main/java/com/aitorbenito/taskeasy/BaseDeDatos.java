@@ -149,8 +149,8 @@ public class BaseDeDatos {
                     INSERTAR CATEGORÍAS POR DEFECTO
                      (solo si la tabla está vacía)
             */
-            try (ResultSet rs = stat.executeQuery("SELECT COUNT(*) AS total FROM categorias")) {
-                if (rs.next() && rs.getInt("total") == 0) {
+            try (ResultSet resulSet = stat.executeQuery("SELECT COUNT(*) AS total FROM categorias")) {
+                if (resulSet.next() && resulSet.getInt("total") == 0) {
                     stat.execute("INSERT INTO categorias (nombre) VALUES ('Sin categoría');");
                     stat.execute("INSERT INTO categorias (nombre) VALUES ('Trabajo');");
                     stat.execute("INSERT INTO categorias (nombre) VALUES ('Personal');");

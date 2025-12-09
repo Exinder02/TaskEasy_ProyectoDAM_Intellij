@@ -28,11 +28,11 @@ import java.sql.SQLException;
  - Gestiona la navegación a la ventana principal (Main.abrirMain()).
  */
 public class ControladorLogueo {
-
+    //Boton registro
     public Button btnRegister;
     /*
-        Elementos de la interfaz de usuario
-        */
+     Elementos de la interfaz de usuario
+    */
     @FXML private TextField txtUsuario;
     @FXML private PasswordField txtContraseña;
     @FXML private Button btnLogeo;
