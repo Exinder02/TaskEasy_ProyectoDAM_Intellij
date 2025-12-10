@@ -1,0 +1,95 @@
+<?xml version="1.0" encoding="UTF-8"?>
+
+<?import javafx.scene.control.*?>
+<?import javafx.scene.layout.*?>
+<?import javafx.geometry.Insets?>
+
+<BorderPane xmlns="http://javafx.com/javafx/21"
+            xmlns:fx="http://javafx.com/fxml"
+            fx:controller="com.aitorbenito.taskeasy.ControladorPrincipal">
+
+    <top>
+        <VBox>
+            <Label text="Gestor de tareas - TaskEasy"
+                   style="-fx-font-size: 18px; -fx-font-weight: bold; -fx-padding: 10;" />
+
+            <MenuBar>
+                <Menu text="Archivo">
+                    <MenuItem text="Nueva tarea" onAction="#agregarTarea"/>
+                    <MenuItem text="Guardar cambios" onAction="#guardarCambios"/>
+                    <SeparatorMenuItem/>
+                    <MenuItem text="Cerrar sesión" onAction="#cerrarSesion"/>
+                    <MenuItem text="Salir" onAction="#cerrarApp"/>
+                </Menu>
+
+                <Menu text="Ajustes">
+                    <MenuItem text="Cambiar tema (Oscuro/Claro)" onAction="#cambiarTema"/>
+                </Menu>
+
+                <Menu text="Ayuda">
+                    <MenuItem text="Acerca de TaskEasy" onAction="#acercaDeTaskeasy"/>
+                </Menu>
+            </MenuBar>
+        </VBox>
+    </top>
+
+
+    <center>
+        <TableView fx:id="tablaTareas">
+            <columns>
+                <TableColumn fx:id="colTitulo" text="Título" prefWidth="200"/>
+                <TableColumn fx:id="colDescripcion" text="Descripción" prefWidth="300"/>
+                <TableColumn fx:id="colFecha" text="Fecha" prefWidth="120"/>
+                <TableColumn fx:id="colEstado" text="Estado" prefWidth="120"/>
+            </columns>
+        </TableView>
+    </center>
+
+    <bottom>
+        <VBox spacing="10">
+            <padding>
+                <Insets top="10" right="10" bottom="10" left="10"/>
+            </padding>
+
+            <GridPane hgap="10" vgap="10">
+                <Label text="Título:" GridPane.rowIndex="0" GridPane.columnIndex="0"/>
+                <TextField fx:id="textoTitulo" GridPane.rowIndex="0" GridPane.columnIndex="1"/>
+
+                <Label text="Descripción:" GridPane.rowIndex="1" GridPane.columnIndex="0"/>
+                <TextArea fx:id="textoDescripcion"
+                          GridPane.rowIndex="1"
+                          GridPane.columnIndex="1"
+                          prefRowCount="5"
+                          wrapText="true"/>
+
+                <Label text="Fecha:" GridPane.rowIndex="2" GridPane.columnIndex="0"/>
+                <DatePicker fx:id="dpFecha" GridPane.rowIndex="2" GridPane.columnIndex="1"/>
+
+                <Label text="Estado:" GridPane.rowIndex="3" GridPane.columnIndex="0"/>
+                <ChoiceBox fx:id="cbEstado" GridPane.rowIndex="3" GridPane.columnIndex="1"/>
+            </GridPane>
+
+            <HBox spacing="10">
+                <padding>
+                    <Insets top="10" right="10" bottom="10" left="10"/>
+                </padding>
+
+                <Button text="Agregar" onAction="#agregarTarea"/>
+                <Button text="Eliminar" onAction="#eliminarTarea"/>
+                <Button text="Modificar" onAction="#modificarTarea"/>
+                <Button text="Cerrar sesión" onAction="#cerrarSesion"/>
+
+            </HBox>
+
+            <!-- HBOX SOLO PARA LA LEYENDA -->
+            <HBox fx:id="contLeyenda"
+                  spacing="15"
+                  alignment="CENTER_RIGHT">
+                <padding>
+                    <Insets top="5" right="10" bottom="0" left="10"/>
+                </padding>
+            </HBox>
+
+        </VBox>
+    </bottom>
+</BorderPane>

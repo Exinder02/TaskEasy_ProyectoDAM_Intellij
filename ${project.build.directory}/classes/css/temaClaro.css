@@ -1,0 +1,58 @@
+/* --- FONDO GLOBAL --- */
+.root {
+    -fx-base: white;
+    -fx-background-color: white;
+    -fx-text-fill: black;
+}
+
+/* --- BARRA DE MENÚ --- */
+.menu-bar {
+    -fx-background-color: #ececec;
+}
+.menu-bar .label {
+    -fx-text-fill: black;
+}
+
+/* --- MENÚS --- */
+.context-menu {
+    -fx-background-color: white;
+}
+.menu-item .label {
+    -fx-text-fill: black;
+}
+.menu-item:focused {
+    -fx-background-color: #dcdcdc;
+}
+
+/* --- TABLA --- */
+.table-view {
+    -fx-background-color: white;
+    -fx-control-inner-background: white;
+    -fx-table-cell-border-color: #ccc;
+    -fx-table-header-border-color: #ccc;
+}
+.table-view .column-header-background {
+    -fx-background-color: #f4f4f4;
+}
+.table-view .column-header {
+    -fx-text-fill: black;
+}
+
+/* --- CAMPOS DE TEXTO --- */
+.text-field,
+.text-area {
+    -fx-background-color: white;
+    -fx-control-inner-background: white;
+    -fx-text-fill: black;
+    -fx-prompt-text-fill: #555;
+    -fx-border-color: #ccc;
+}
+
+/* --- BOTONES --- */
+.button {
+    -fx-background-color: #e6e6e6;
+    -fx-text-fill: black;
+}
+.button:hover {
+    -fx-background-color: #d3d3d3;
+}
